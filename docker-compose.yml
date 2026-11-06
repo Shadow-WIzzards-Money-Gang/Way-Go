@@ -1,0 +1,10 @@
+services:
+  banco:
+    container_name: banco-waygo
+    image: gvenzl/oracle-free:23
+    ports:
+      - "1521:1521"
+    environment:
+      - ORACLE_PASSWORD=secret
+      - APP_USER=app
+      - APP_USER_PASSWORD=app123
