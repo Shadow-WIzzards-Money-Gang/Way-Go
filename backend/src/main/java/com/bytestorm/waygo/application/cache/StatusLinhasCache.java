@@ -18,11 +18,6 @@ import com.bytestorm.waygo.domain.interfaces.LinhaTransporteRepository;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Mantém em memória o status atual de cada linha para que a atualização periódica só acesse o banco
- * quando houver mudança. É recarregado do banco a cada intervalo de recarga para captar alterações
- * feitas por outros fluxos (ex.: atualização manual).
- */
 @Slf4j
 @Component
 public class StatusLinhasCache {
@@ -68,6 +63,12 @@ public class StatusLinhasCache {
 
 	public Optional<StatusOperacional> statusAtual(Long linhaId) {
 		return Optional.ofNullable(statusPorLinha.get(linhaId));
+	}
+
+	/** Cópia do status atual de todas as linhas, carregando do banco se o cache estiver vazio ou expirado. */
+	public synchronized Map<Long, StatusOperacional> statusAtuais() {
+		carregarSeNecessario();
+		return Map.copyOf(statusPorLinha);
 	}
 
 	public void registrar(Long linhaId, StatusOperacional status) {

@@ -19,6 +19,13 @@ public class LinhaEstacaoRepositoryAdapter implements LinhaEstacaoRepository {
 	private final LinhaEstacaoJpaRepository jpaRepository;
 
 	@Override
+	public List<LinhaEstacao> listarTodas() {
+		return jpaRepository.findAll().stream()
+				.map(PersistenciaMapper::paraDominio)
+				.toList();
+	}
+
+	@Override
 	public List<LinhaEstacao> listarPorLinhaOrdenadoPorSequencia(Long linhaId) {
 		return jpaRepository.findByLinhaIdOrderBySequenciaAsc(linhaId).stream()
 				.map(PersistenciaMapper::paraDominio)

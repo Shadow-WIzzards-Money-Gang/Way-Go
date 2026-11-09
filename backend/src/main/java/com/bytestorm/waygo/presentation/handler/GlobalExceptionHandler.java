@@ -1,29 +1,58 @@
 package com.bytestorm.waygo.presentation.handler;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import com.bytestorm.waygo.application.dto.response.ErroResponse;
 import com.bytestorm.waygo.domain.exception.RecursoNaoEncontradoException;
+import com.bytestorm.waygo.domain.exception.RequisicaoInvalidaException;
+import com.bytestorm.waygo.domain.exception.RotaNaoEncontradaException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+	private final Clock clock;
+
+	public GlobalExceptionHandler(Clock clock) {
+		this.clock = clock;
+	}
+
 	@ExceptionHandler(RecursoNaoEncontradoException.class)
-	public ProblemDetail tratarRecursoNaoEncontrado(RecursoNaoEncontradoException ex) {
-		ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
-		problema.setTitle("Recurso não encontrado");
-		return problema;
+	public ResponseEntity<ErroResponse> tratarRecursoNaoEncontrado(RecursoNaoEncontradoException ex) {
+		return erro(HttpStatus.NOT_FOUND, ex.getMessage());
+	}
+
+	@ExceptionHandler(RotaNaoEncontradaException.class)
+	public ResponseEntity<ErroResponse> tratarRotaNaoEncontrada(RotaNaoEncontradaException ex) {
+		return erro(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage());
+	}
+
+	@ExceptionHandler(RequisicaoInvalidaException.class)
+	public ResponseEntity<ErroResponse> tratarRequisicaoInvalida(RequisicaoInvalidaException ex) {
+		return erro(HttpStatus.BAD_REQUEST, ex.getMessage());
+	}
+
+	@ExceptionHandler(MissingServletRequestParameterException.class)
+	public ResponseEntity<ErroResponse> tratarParametroAusente(MissingServletRequestParameterException ex) {
+		return erro(HttpStatus.BAD_REQUEST, "Parâmetro obrigatório ausente: '" + ex.getParameterName() + "'");
 	}
 
 	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
-	public ProblemDetail tratarParametroInvalido(MethodArgumentTypeMismatchException ex) {
-		ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+	public ResponseEntity<ErroResponse> tratarParametroInvalido(MethodArgumentTypeMismatchException ex) {
+		return erro(HttpStatus.BAD_REQUEST,
 				"Valor inválido para o parâmetro '" + ex.getName() + "': " + ex.getValue());
-		problema.setTitle("Parâmetro inválido");
-		return problema;
+	}
+
+	private ResponseEntity<ErroResponse> erro(HttpStatus status, String message) {
+		return ResponseEntity.status(status)
+				.body(new ErroResponse(status.value(), message, LocalDateTime.now(clock)));
 	}
 
 }

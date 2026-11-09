@@ -2,6 +2,7 @@ package com.bytestorm.waygo.presentation.controller;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,34 +15,36 @@ import com.bytestorm.waygo.application.dto.response.LinhaDaEstacaoResponse;
 import com.bytestorm.waygo.application.service.ConexaoService;
 import com.bytestorm.waygo.application.service.EstacaoService;
 
-import lombok.RequiredArgsConstructor;
-
 @RestController
 @RequestMapping("/estacoes")
-@RequiredArgsConstructor
 public class EstacaoController {
 
 	private final EstacaoService estacaoService;
 	private final ConexaoService conexaoService;
 
+	public EstacaoController(EstacaoService estacaoService, ConexaoService conexaoService) {
+		this.estacaoService = estacaoService;
+		this.conexaoService = conexaoService;
+	}
+
 	@GetMapping
-	public List<EstacaoResumoResponse> listar() {
-		return estacaoService.listar();
+	public ResponseEntity<List<EstacaoResumoResponse>> listar() {
+		return ResponseEntity.ok(estacaoService.listar());
 	}
 
 	@GetMapping("/{id}")
-	public EstacaoDetalheResponse buscarPorId(@PathVariable Long id) {
-		return estacaoService.buscarPorId(id);
+	public ResponseEntity<EstacaoDetalheResponse> buscarPorId(@PathVariable Long id) {
+		return ResponseEntity.ok(estacaoService.buscarPorId(id));
 	}
 
 	@GetMapping("/{id}/linhas")
-	public List<LinhaDaEstacaoResponse> listarLinhas(@PathVariable Long id) {
-		return estacaoService.listarLinhas(id);
+	public ResponseEntity<List<LinhaDaEstacaoResponse>> listarLinhas(@PathVariable Long id) {
+		return ResponseEntity.ok(estacaoService.listarLinhas(id));
 	}
 
 	@GetMapping("/{id}/conexoes")
-	public List<ConexaoResponse> listarConexoes(@PathVariable Long id) {
-		return conexaoService.listarPorEstacao(id);
+	public ResponseEntity<List<ConexaoResponse>> listarConexoes(@PathVariable Long id) {
+		return ResponseEntity.ok(conexaoService.listarPorEstacao(id));
 	}
 
 }

@@ -26,6 +26,18 @@ public enum StatusOperacional {
 		return textos;
 	}
 
+	public String getDescricao() {
+		return textos.isEmpty() ? "Status desconhecido" : textos.get(0);
+	}
+
+	public boolean bloqueiaCirculacao() {
+		return this == PARALISADA || this == OPERACAO_ENCERRADA;
+	}
+
+	public boolean afetaTempo() {
+		return this == VELOCIDADE_REDUZIDA || this == OPERACAO_PARCIAL;
+	}
+
 	public static StatusOperacional deTexto(String texto) {
 		if (texto == null) {
 			return DESCONHECIDO;
