@@ -45,4 +45,13 @@ public class LinhaStatusEntity {
 	@Column(name = "ATUALIZADO_EM", nullable = false)
 	private LocalDateTime atualizadoEm;
 
+	public LinhaStatusEntity(Long linhaId, StatusOperacional status, String descricao, OrigemStatus origem,
+			LocalDateTime atualizadoEm) {
+		this.linhaId = linhaId;
+		this.status = status;
+		this.descricao = descricao;
+		this.origem = origem;
+		this.atualizadoEm = atualizadoEm;
+	}
+
 }

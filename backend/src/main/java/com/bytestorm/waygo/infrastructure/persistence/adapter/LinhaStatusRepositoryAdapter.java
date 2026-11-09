@@ -1,5 +1,6 @@
 package com.bytestorm.waygo.infrastructure.persistence.adapter;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
@@ -19,8 +20,20 @@ public class LinhaStatusRepositoryAdapter implements LinhaStatusRepository {
 
 	@Override
 	public Optional<LinhaStatus> buscarAtualPorLinha(Long linhaId) {
-		return jpaRepository.findFirstByLinhaIdOrderByAtualizadoEmDescIdDesc(linhaId)
+		return jpaRepository.findFirstByLinhaIdOrderByIdDesc(linhaId)
 				.map(PersistenciaMapper::paraDominio);
+	}
+
+	@Override
+	public List<LinhaStatus> buscarAtuaisDeTodasAsLinhas() {
+		return jpaRepository.findMaisRecentePorLinha().stream()
+				.map(PersistenciaMapper::paraDominio)
+				.toList();
+	}
+
+	@Override
+	public LinhaStatus salvar(LinhaStatus linhaStatus) {
+		return PersistenciaMapper.paraDominio(jpaRepository.save(PersistenciaMapper.paraEntity(linhaStatus)));
 	}
 
 }

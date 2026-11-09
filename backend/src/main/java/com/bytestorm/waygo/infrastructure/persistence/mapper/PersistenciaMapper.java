@@ -51,4 +51,9 @@ public final class PersistenciaMapper {
 				entity.getOrigem(), entity.getAtualizadoEm());
 	}
 
+	public static LinhaStatusEntity paraEntity(LinhaStatus linhaStatus) {
+		return new LinhaStatusEntity(linhaStatus.getLinhaId(), linhaStatus.getStatus(), linhaStatus.getDescricao(),
+				linhaStatus.getOrigem(), linhaStatus.getAtualizadoEm());
+	}
+
 }

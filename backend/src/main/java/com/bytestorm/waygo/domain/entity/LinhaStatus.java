@@ -28,4 +28,8 @@ public class LinhaStatus {
 		this.atualizadoEm = Objects.requireNonNull(atualizadoEm, "atualizadoEm é obrigatório");
 	}
 
+	public boolean mudouPara(StatusOperacional novoStatus) {
+		return status != novoStatus;
+	}
+
 }
