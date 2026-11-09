@@ -3,19 +3,16 @@ package com.bytestorm.waygo.application.service;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import com.bytestorm.waygo.application.cache.StatusLinhasCache;
 import com.bytestorm.waygo.domain.entity.LinhaStatus;
-import com.bytestorm.waygo.domain.entity.LinhaTransporte;
 import com.bytestorm.waygo.domain.enums.OrigemStatus;
+import com.bytestorm.waygo.domain.enums.StatusOperacional;
 import com.bytestorm.waygo.domain.interfaces.FonteStatusLinhas;
 import com.bytestorm.waygo.domain.interfaces.LinhaStatusRepository;
-import com.bytestorm.waygo.domain.interfaces.LinhaTransporteRepository;
 import com.bytestorm.waygo.domain.valueobject.StatusLinhaExterno;
 
 import lombok.RequiredArgsConstructor;
@@ -27,37 +24,33 @@ import lombok.extern.slf4j.Slf4j;
 public class AtualizacaoStatusLinhaService {
 
 	private final FonteStatusLinhas fonteStatusLinhas;
-	private final LinhaTransporteRepository linhaRepository;
 	private final LinhaStatusRepository linhaStatusRepository;
+	private final StatusLinhasCache cache;
 	private final Clock clock;
 
-	@Transactional
 	public int atualizar() {
 		List<StatusLinhaExterno> statusExternos = fonteStatusLinhas.buscarStatusAtuais();
-
-		Map<String, Long> linhaIdPorCodigo = linhaRepository.listarTodas().stream()
-				.collect(Collectors.toMap(LinhaTransporte::getCodigo, LinhaTransporte::getId));
-		Map<Long, LinhaStatus> statusAtualPorLinha = linhaStatusRepository.buscarAtuaisDeTodasAsLinhas().stream()
-				.collect(Collectors.toMap(LinhaStatus::getLinhaId, Function.identity()));
+		cache.carregarSeNecessario();
 
 		LocalDateTime agora = LocalDateTime.now(clock);
 		int registrados = 0;
 		for (StatusLinhaExterno externo : statusExternos) {
-			Long linhaId = linhaIdPorCodigo.get(externo.codigoLinha());
-			if (linhaId == null) {
+			Optional<Long> linhaId = cache.linhaIdPorCodigo(externo.codigoLinha());
+			if (linhaId.isEmpty()) {
 				log.debug("Linha {} da fonte externa não está cadastrada; ignorando", externo.codigoLinha());
 				continue;
 			}
 
-			LinhaStatus atual = statusAtualPorLinha.get(linhaId);
-			if (atual != null && !atual.mudouPara(externo.status())) {
+			Optional<StatusOperacional> atual = cache.statusAtual(linhaId.get());
+			if (atual.isPresent() && atual.get() == externo.status()) {
 				continue;
 			}
 
-			linhaStatusRepository.salvar(new LinhaStatus(null, linhaId, externo.status(), externo.descricao(),
+			linhaStatusRepository.salvar(new LinhaStatus(null, linhaId.get(), externo.status(), externo.descricao(),
 					OrigemStatus.API, agora));
+			cache.registrar(linhaId.get(), externo.status());
 			log.info("Linha {} mudou de status: {} -> {}", externo.codigoLinha(),
-					atual == null ? "(sem status)" : atual.getStatus(), externo.status());
+					atual.map(Enum::name).orElse("(sem status)"), externo.status());
 			registrados++;
 		}
 
