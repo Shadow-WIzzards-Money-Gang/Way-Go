@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.bytestorm.waygo.application.cache.GrafoRedeCache;
 import com.bytestorm.waygo.application.cache.StatusLinhasCache;
+import com.bytestorm.waygo.application.dto.request.RotaRequest;
 import com.bytestorm.waygo.application.dto.response.BaldeacaoRotaResponse;
 import com.bytestorm.waygo.application.dto.response.EstacaoResumoResponse;
 import com.bytestorm.waygo.application.dto.response.LinhaResumoResponse;
@@ -26,6 +27,7 @@ import com.bytestorm.waygo.domain.exception.RequisicaoInvalidaException;
 import com.bytestorm.waygo.domain.exception.RotaNaoEncontradaException;
 import com.bytestorm.waygo.domain.interfaces.EstacaoRepository;
 import com.bytestorm.waygo.domain.service.CalculadoraRota;
+import com.bytestorm.waygo.domain.util.Textos;
 import com.bytestorm.waygo.domain.valueobject.ArestaRede;
 import com.bytestorm.waygo.domain.valueobject.CaminhoRota;
 import com.bytestorm.waygo.domain.valueobject.GrafoRede;
@@ -55,27 +57,53 @@ public class RotaService {
 		this.fatorLentidao = fatorLentidao;
 	}
 
-	public RotaResponse calcular(Long origemId, Long destinoId, CriterioRota criterio) {
-		if (origemId.equals(destinoId)) {
+	public RotaResponse calcular(RotaRequest request) {
+		CriterioRota criterio = resolverCriterio(request.criterio());
+
+		GrafoRede grafo = grafoCache.obter();
+		Estacao origem = buscarEstacao(grafo, request.origem());
+		Estacao destino = buscarEstacao(grafo, request.destino());
+		if (origem.getId().equals(destino.getId())) {
 			throw new RequisicaoInvalidaException("A estação de origem e a de destino devem ser diferentes");
 		}
 
-		GrafoRede grafo = grafoCache.obter();
-		Estacao origem = buscarEstacao(grafo, origemId);
-		Estacao destino = buscarEstacao(grafo, destinoId);
-		ParametrosRota parametros = new ParametrosRota(criterio == null ? criterioPadrao : criterio, fatorLentidao,
+		ParametrosRota parametros = new ParametrosRota(criterio, fatorLentidao,
 				(int) penalidadeBaldeacao.toSeconds(), statusCache.statusAtuais());
 
-		CaminhoRota caminho = calculadora.calcular(grafo, origemId, destinoId, parametros)
+		CaminhoRota caminho = calculadora.calcular(grafo, origem.getId(), destino.getId(), parametros)
 				.orElseThrow(() -> new RotaNaoEncontradaException("Não há rota disponível entre " + origem.getNome()
 						+ " e " + destino.getNome() + " com o status atual das linhas"));
 		return montarResposta(grafo, parametros, origem, destino, caminho);
 	}
 
-	private Estacao buscarEstacao(GrafoRede grafo, Long id) {
-		return grafo.estacao(id).orElseThrow(() -> estacaoRepository.existePorId(id)
-				? new RotaNaoEncontradaException("A estação " + id + " não é atendida por nenhuma linha em operação")
-				: new RecursoNaoEncontradoException("Estação não encontrada: " + id));
+	private CriterioRota resolverCriterio(String criterio) {
+		if (criterio == null || criterio.isBlank()) {
+			return criterioPadrao;
+		}
+		try {
+			return CriterioRota.de(criterio);
+		} catch (IllegalArgumentException e) {
+			throw new RequisicaoInvalidaException(e.getMessage() + ". Valores aceitos: MENOR_TEMPO, "
+					+ "MENOS_BALDEACOES ou EQUILIBRADO");
+		}
+	}
+
+	private Estacao buscarEstacao(GrafoRede grafo, String nome) {
+		List<Estacao> encontradas = grafo.estacoesPorNome(nome);
+		if (encontradas.size() == 1) {
+			return encontradas.getFirst();
+		}
+		if (encontradas.size() > 1) {
+			throw new RequisicaoInvalidaException("Há mais de uma estação com o nome \"" + nome.trim() + "\"");
+		}
+
+		String alvo = Textos.normalizar(nome);
+		boolean existe = estacaoRepository.listarTodas().stream()
+				.anyMatch(estacao -> Textos.normalizar(estacao.getNome()).equals(alvo));
+		throw existe
+				? new RotaNaoEncontradaException(
+						"A estação " + nome.trim() + " não é atendida por nenhuma linha em operação")
+				: new RecursoNaoEncontradoException("Estação não encontrada: " + nome.trim());
 	}
 
 	private RotaResponse montarResposta(GrafoRede grafo, ParametrosRota parametros, Estacao origem, Estacao destino,

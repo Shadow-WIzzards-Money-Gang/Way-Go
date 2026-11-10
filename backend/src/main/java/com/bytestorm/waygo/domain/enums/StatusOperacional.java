@@ -1,9 +1,9 @@
 package com.bytestorm.waygo.domain.enums;
 
-import java.text.Normalizer;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
+
+import com.bytestorm.waygo.domain.util.Textos;
 
 public enum StatusOperacional {
 
@@ -50,11 +50,7 @@ public enum StatusOperacional {
 	}
 
 	private static String normalizar(String texto) {
-		return Normalizer.normalize(texto, Normalizer.Form.NFD)
-				.replaceAll("\\p{M}", "")
-				.toLowerCase(Locale.ROOT)
-				.trim()
-				.replaceAll("\\s+", " ");
+		return Textos.normalizar(texto);
 	}
 
 }

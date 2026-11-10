@@ -2,9 +2,12 @@ package com.bytestorm.waygo.presentation.handler;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -48,6 +51,14 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErroResponse> tratarParametroInvalido(MethodArgumentTypeMismatchException ex) {
 		return erro(HttpStatus.BAD_REQUEST,
 				"Valor inválido para o parâmetro '" + ex.getName() + "': " + ex.getValue());
+	}
+
+	@ExceptionHandler(BindException.class)
+	public ResponseEntity<ErroResponse> tratarValidacao(BindException ex) {
+		String mensagem = ex.getFieldErrors().stream()
+				.map(FieldError::getDefaultMessage)
+				.collect(Collectors.joining("; "));
+		return erro(HttpStatus.BAD_REQUEST, mensagem.isEmpty() ? "Requisição inválida" : mensagem);
 	}
 
 	private ResponseEntity<ErroResponse> erro(HttpStatus status, String message) {

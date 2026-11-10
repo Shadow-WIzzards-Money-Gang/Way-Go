@@ -16,6 +16,7 @@ import com.bytestorm.waygo.domain.entity.Estacao;
 import com.bytestorm.waygo.domain.entity.LinhaEstacao;
 import com.bytestorm.waygo.domain.entity.LinhaTransporte;
 import com.bytestorm.waygo.domain.enums.TipoConexao;
+import com.bytestorm.waygo.domain.util.Textos;
 
 public final class GrafoRede {
 
@@ -116,6 +117,14 @@ public final class GrafoRede {
 
 	public Optional<Estacao> estacao(Long estacaoId) {
 		return Optional.ofNullable(estacoes.get(estacaoId));
+	}
+
+	/** Estações atendidas pelo grafo cujo nome normalizado (sem acentos/caixa) é igual ao informado. */
+	public List<Estacao> estacoesPorNome(String nome) {
+		String alvo = Textos.normalizar(nome);
+		return estacoes.values().stream()
+				.filter(estacao -> Textos.normalizar(estacao.getNome()).equals(alvo))
+				.toList();
 	}
 
 	public int quantidadeNos() {
