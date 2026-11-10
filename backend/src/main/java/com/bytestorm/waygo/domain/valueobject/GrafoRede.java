@@ -127,6 +127,23 @@ public final class GrafoRede {
 				.toList();
 	}
 
+	public Collection<NoRede> nos() {
+		return nos.values();
+	}
+
+	/** Todas as arestas dirigidas do grafo (conexões e baldeações). */
+	public List<ArestaRede> arestas() {
+		return arestasPorOrigem.values().stream().flatMap(List::stream).toList();
+	}
+
+	public Collection<LinhaTransporte> linhas() {
+		return linhas.values();
+	}
+
+	public Collection<Estacao> estacoes() {
+		return estacoes.values();
+	}
+
 	public int quantidadeNos() {
 		return nos.size();
 	}
