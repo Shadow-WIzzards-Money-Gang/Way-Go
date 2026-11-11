@@ -15,6 +15,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.bytestorm.waygo.domain.entity.Usuario;
 import com.bytestorm.waygo.domain.enums.Role;
 import com.bytestorm.waygo.domain.interfaces.SenhaHasher;
+import com.bytestorm.waygo.domain.valueobject.TokenAcesso;
 
 class TokenServiceTest {
 
@@ -53,7 +54,7 @@ class TokenServiceTest {
 	void tokenGeradoEhValidoEDevolveOEmailNormalizado() {
 		TokenService tokenService = tokenService();
 
-		String token = tokenService.gerarToken(usuario);
+		String token = tokenService.gerarToken(usuario).token();
 
 		assertThat(tokenService.validarToken(token)).contains("ana@email.com");
 	}
@@ -62,7 +63,7 @@ class TokenServiceTest {
 	void tokenCarregaIdRolesEmissorEExpiracao() {
 		Instant antes = Instant.now().truncatedTo(ChronoUnit.SECONDS);
 
-		DecodedJWT jwt = JWT.decode(tokenService().gerarToken(usuario));
+		DecodedJWT jwt = JWT.decode(tokenService().gerarToken(usuario).token());
 
 		assertThat(jwt.getIssuer()).isEqualTo(EMISSOR);
 		assertThat(jwt.getSubject()).isEqualTo("ana@email.com");
@@ -73,9 +74,16 @@ class TokenServiceTest {
 	}
 
 	@Test
+	void expiraEmDevolvidoEhIgualAoExpDoToken() {
+		TokenAcesso tokenAcesso = tokenService().gerarToken(usuario);
+
+		assertThat(tokenAcesso.expiraEm()).isEqualTo(JWT.decode(tokenAcesso.token()).getExpiresAtAsInstant());
+	}
+
+	@Test
 	void rejeitaTokenVazioMalformadoOuAdulterado() {
 		TokenService tokenService = tokenService();
-		String token = tokenService.gerarToken(usuario);
+		String token = tokenService.gerarToken(usuario).token();
 
 		assertThat(tokenService.validarToken(null)).isEmpty();
 		assertThat(tokenService.validarToken("  ")).isEmpty();
@@ -85,7 +93,7 @@ class TokenServiceTest {
 
 	@Test
 	void rejeitaTokenAssinadoComOutroSegredoOuDeOutroEmissor() {
-		String token = tokenService().gerarToken(usuario);
+		String token = tokenService().gerarToken(usuario).token();
 
 		assertThat(tokenService(SEGREDO + "-outro", EMISSOR, 60L).validarToken(token)).isEmpty();
 		assertThat(tokenService(SEGREDO, "outro-emissor", 60L).validarToken(token)).isEmpty();
@@ -93,7 +101,7 @@ class TokenServiceTest {
 
 	@Test
 	void rejeitaTokenExpirado() {
-		String expirado = tokenService(SEGREDO, EMISSOR, -1L).gerarToken(usuario);
+		String expirado = tokenService(SEGREDO, EMISSOR, -1L).gerarToken(usuario).token();
 
 		assertThat(tokenService().validarToken(expirado)).isEmpty();
 	}

@@ -27,6 +27,8 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> {
                 auth.requestMatchers("/api/v1/auth/**").permitAll();
+                // Página de erro do Spring: sem isso, qualquer erro não tratado vira 401 vazio
+                auth.requestMatchers("/error").permitAll();
                 auth.anyRequest().authenticated();
             })
             .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))

@@ -13,6 +13,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.bytestorm.waygo.domain.entity.Usuario;
 import com.bytestorm.waygo.domain.interfaces.TokenProvider;
+import com.bytestorm.waygo.domain.valueobject.TokenAcesso;
 
 @Service
 public class TokenService implements TokenProvider {
@@ -30,15 +31,18 @@ public class TokenService implements TokenProvider {
 	private Long EXPIRACAO_MINUTOS;
 
 	@Override
-	public String gerarToken(Usuario usuario) {
-		return JWT.create()
+	public TokenAcesso gerarToken(Usuario usuario) {
+		Instant emitidoEm = emitidoEm();
+		Instant expiraEm = expiradoEm(emitidoEm);
+		String token = JWT.create()
 				.withIssuer(EMISSOR)
 				.withSubject(usuario.getEmail())
 				.withClaim(CLAIM_ID, usuario.getId().toString())
 				.withClaim(CLAIM_ROLES, usuario.getRoles().stream().map(Enum::name).sorted().toList())
-				.withIssuedAt(emitidoEm())
-				.withExpiresAt(expiradoEm())
+				.withIssuedAt(emitidoEm)
+				.withExpiresAt(expiraEm)
 				.sign(getAlgoritmo());
+		return new TokenAcesso(token, expiraEm);
 	}
 
 	@Override
@@ -60,11 +64,11 @@ public class TokenService implements TokenProvider {
 	}
 
 	private Instant emitidoEm() {
-		return Instant.now(Clock.systemUTC());
+		return Instant.now(Clock.systemUTC()).truncatedTo(ChronoUnit.SECONDS);
 	}
 
-	private Instant expiradoEm() {
-		return emitidoEm().plus(EXPIRACAO_MINUTOS, ChronoUnit.MINUTES);
+	private Instant expiradoEm(Instant emitidoEm) {
+		return emitidoEm.plus(EXPIRACAO_MINUTOS, ChronoUnit.MINUTES);
 	}
 
 	private Algorithm getAlgoritmo() {

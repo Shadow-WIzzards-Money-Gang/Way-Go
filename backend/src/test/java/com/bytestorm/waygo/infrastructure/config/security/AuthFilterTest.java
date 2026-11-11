@@ -72,7 +72,7 @@ class AuthFilterTest {
 
 	@Test
 	void autenticaComTokenValido() throws Exception {
-		Authentication autenticacao = filtrar("Bearer " + tokenService.gerarToken(usuario));
+		Authentication autenticacao = filtrar("Bearer " + tokenService.gerarToken(usuario).token());
 
 		assertThat(autenticacao).isNotNull();
 		assertThat(autenticacao.isAuthenticated()).isTrue();
@@ -84,7 +84,7 @@ class AuthFilterTest {
 
 	@Test
 	void aceitaPrefixoBearerEmMinusculas() throws Exception {
-		assertThat(filtrar("bearer " + tokenService.gerarToken(usuario))).isNotNull();
+		assertThat(filtrar("bearer " + tokenService.gerarToken(usuario).token())).isNotNull();
 	}
 
 	@Test
@@ -100,7 +100,7 @@ class AuthFilterTest {
 		Usuario removido = Usuario.criar("removido@email.com", "senhaForte123",
 				new BCryptSenhaHasher(new BCryptPasswordEncoder()), LocalDateTime.now());
 
-		assertThat(filtrar("Bearer " + tokenService.gerarToken(removido))).isNull();
+		assertThat(filtrar("Bearer " + tokenService.gerarToken(removido).token())).isNull();
 	}
 
 }
