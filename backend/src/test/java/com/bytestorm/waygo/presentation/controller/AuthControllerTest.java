@@ -132,9 +132,20 @@ class AuthControllerTest {
 	}
 
 	@Test
-	void rotasForaDeAuthExigemToken() throws Exception {
-		mockMvc.perform(get("/api/v1/rede"))
+	void rotasNaoLiberadasExigemToken() throws Exception {
+		mockMvc.perform(get("/api/v1/usuarios/me"))
 				.andExpect(status().isUnauthorized());
+		mockMvc.perform(post("/api/v1/rotas"))
+				.andExpect(status().isUnauthorized());
+	}
+
+	/** Consultas públicas passam pela segurança sem token; o 404 vem só de o controller não estar neste teste. */
+	@Test
+	void consultasDaRedeSaoPublicas() throws Exception {
+		mockMvc.perform(get("/api/v1/rede")).andExpect(status().isNotFound());
+		mockMvc.perform(get("/api/v1/linhas/11/status")).andExpect(status().isNotFound());
+		mockMvc.perform(get("/api/v1/estacoes")).andExpect(status().isNotFound());
+		mockMvc.perform(get("/api/v1/rotas")).andExpect(status().isNotFound());
 	}
 
 }

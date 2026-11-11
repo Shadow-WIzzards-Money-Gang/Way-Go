@@ -2,6 +2,7 @@ package com.bytestorm.waygo.infrastructure.config.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
@@ -26,8 +27,12 @@ public class SecurityConfig {
             .cors(Customizer.withDefaults())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> {
-                auth.requestMatchers("/api/v1/auth/**").permitAll();
-                // Página de erro do Spring: sem isso, qualquer erro não tratado vira 401 vazio
+                auth.requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll();
+                auth.requestMatchers(HttpMethod.GET, "/api/v1/linhas/**").permitAll();
+                auth.requestMatchers(HttpMethod.GET, "/api/v1/estacoes/**").permitAll();
+                auth.requestMatchers(HttpMethod.GET, "/api/v1/rede").permitAll();
+                auth.requestMatchers(HttpMethod.GET, "/api/v1/rotas").permitAll();
+                auth.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs").permitAll();
                 auth.requestMatchers("/error").permitAll();
                 auth.anyRequest().authenticated();
             })
