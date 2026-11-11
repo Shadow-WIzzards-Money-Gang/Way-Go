@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import com.bytestorm.waygo.application.dto.response.ErroResponse;
+import com.bytestorm.waygo.domain.exception.CredenciaisInvalidasException;
+import com.bytestorm.waygo.domain.exception.EmailJaCadastradoException;
 import com.bytestorm.waygo.domain.exception.RecursoNaoEncontradoException;
 import com.bytestorm.waygo.domain.exception.RequisicaoInvalidaException;
 import com.bytestorm.waygo.domain.exception.RotaNaoEncontradaException;
@@ -37,6 +40,16 @@ public class GlobalExceptionHandler {
 		return erro(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage());
 	}
 
+	@ExceptionHandler(CredenciaisInvalidasException.class)
+	public ResponseEntity<ErroResponse> tratarCredenciaisInvalidas(CredenciaisInvalidasException ex) {
+		return erro(HttpStatus.UNAUTHORIZED, ex.getMessage());
+	}
+
+	@ExceptionHandler(EmailJaCadastradoException.class)
+	public ResponseEntity<ErroResponse> tratarEmailJaCadastrado(EmailJaCadastradoException ex) {
+		return erro(HttpStatus.CONFLICT, ex.getMessage());
+	}
+
 	@ExceptionHandler(RequisicaoInvalidaException.class)
 	public ResponseEntity<ErroResponse> tratarRequisicaoInvalida(RequisicaoInvalidaException ex) {
 		return erro(HttpStatus.BAD_REQUEST, ex.getMessage());
@@ -51,6 +64,11 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErroResponse> tratarParametroInvalido(MethodArgumentTypeMismatchException ex) {
 		return erro(HttpStatus.BAD_REQUEST,
 				"Valor inválido para o parâmetro '" + ex.getName() + "': " + ex.getValue());
+	}
+
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public ResponseEntity<ErroResponse> tratarCorpoInvalido(HttpMessageNotReadableException ex) {
+		return erro(HttpStatus.BAD_REQUEST, "Corpo da requisição ausente ou com JSON inválido");
 	}
 
 	@ExceptionHandler(BindException.class)

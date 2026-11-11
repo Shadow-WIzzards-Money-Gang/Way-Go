@@ -1,11 +1,15 @@
 package com.bytestorm.waygo.infrastructure.persistence.mapper;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import com.bytestorm.waygo.domain.entity.Baldeacao;
 import com.bytestorm.waygo.domain.entity.ConexaoEstacao;
 import com.bytestorm.waygo.domain.entity.Estacao;
 import com.bytestorm.waygo.domain.entity.LinhaEstacao;
 import com.bytestorm.waygo.domain.entity.LinhaStatus;
 import com.bytestorm.waygo.domain.entity.LinhaTransporte;
+import com.bytestorm.waygo.domain.entity.Usuario;
 import com.bytestorm.waygo.domain.valueobject.Coordenada;
 import com.bytestorm.waygo.infrastructure.persistence.entity.BaldeacaoEntity;
 import com.bytestorm.waygo.infrastructure.persistence.entity.ConexaoEstacaoEntity;
@@ -13,6 +17,8 @@ import com.bytestorm.waygo.infrastructure.persistence.entity.EstacaoEntity;
 import com.bytestorm.waygo.infrastructure.persistence.entity.LinhaEstacaoEntity;
 import com.bytestorm.waygo.infrastructure.persistence.entity.LinhaStatusEntity;
 import com.bytestorm.waygo.infrastructure.persistence.entity.LinhaTransporteEntity;
+import com.bytestorm.waygo.infrastructure.persistence.entity.RoleEntity;
+import com.bytestorm.waygo.infrastructure.persistence.entity.UsuarioEntity;
 
 public final class PersistenciaMapper {
 
@@ -54,6 +60,16 @@ public final class PersistenciaMapper {
 	public static LinhaStatusEntity paraEntity(LinhaStatus linhaStatus) {
 		return new LinhaStatusEntity(linhaStatus.getLinhaId(), linhaStatus.getStatus(), linhaStatus.getDescricao(),
 				linhaStatus.getOrigem(), linhaStatus.getAtualizadoEm());
+	}
+
+	public static Usuario paraDominio(UsuarioEntity entity) {
+		return Usuario.reconstruir(entity.getId(), entity.getEmail(), entity.getSenhaHash(),
+				entity.getRoles().stream().map(RoleEntity::getNome).collect(Collectors.toSet()), entity.getCriadoEm());
+	}
+
+	public static UsuarioEntity paraEntity(Usuario usuario, Set<RoleEntity> roles) {
+		return new UsuarioEntity(usuario.getId(), usuario.getEmail(), usuario.getSenhaHash(), usuario.getCriadoEm(),
+				roles);
 	}
 
 }
