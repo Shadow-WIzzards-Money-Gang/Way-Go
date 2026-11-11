@@ -1,6 +1,6 @@
 package com.bytestorm.waygo.domain.entity;
 
-import java.util.Objects;
+import static com.bytestorm.waygo.domain.util.Validacoes.exigir;
 
 import lombok.Getter;
 
@@ -10,18 +10,46 @@ public class LinhaEstacao {
 	private final Long id;
 	private final Long linhaId;
 	private final Long estacaoId;
-	private final int sequencia;
-	private final boolean ativa;
+	private int sequencia;
+	private boolean ativa;
 
-	public LinhaEstacao(Long id, Long linhaId, Long estacaoId, int sequencia, boolean ativa) {
+	private LinhaEstacao(Long id, Long linhaId, Long estacaoId, int sequencia, boolean ativa) {
+		this.id = id;
+		this.linhaId = exigir(linhaId, "linhaId");
+		this.estacaoId = exigir(estacaoId, "estacaoId");
+		this.sequencia = validarSequencia(sequencia);
+		this.ativa = ativa;
+	}
+
+	public static LinhaEstacao criar(Long linhaId, Long estacaoId, int sequencia) {
+		return reconstruir(null, linhaId, estacaoId, sequencia, true);
+	}
+
+	public static LinhaEstacao reconstruir(Long id, Long linhaId, Long estacaoId, int sequencia, boolean ativa) {
+		return new LinhaEstacao(id, linhaId, estacaoId, sequencia, ativa);
+	}
+
+	public void ativar() {
+		this.ativa = true;
+	}
+
+	public void desativar() {
+		this.ativa = false;
+	}
+
+	public void reposicionar(int novaSequencia) {
+		this.sequencia = validarSequencia(novaSequencia);
+	}
+
+	public boolean pertenceALinha(Long outraLinhaId) {
+		return linhaId.equals(outraLinhaId);
+	}
+
+	private static int validarSequencia(int sequencia) {
 		if (sequencia <= 0) {
 			throw new IllegalArgumentException("sequencia deve ser maior que zero");
 		}
-		this.id = id;
-		this.linhaId = Objects.requireNonNull(linhaId, "linhaId é obrigatório");
-		this.estacaoId = Objects.requireNonNull(estacaoId, "estacaoId é obrigatório");
-		this.sequencia = sequencia;
-		this.ativa = ativa;
+		return sequencia;
 	}
 
 }

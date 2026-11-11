@@ -27,7 +27,6 @@ import com.bytestorm.waygo.domain.exception.RequisicaoInvalidaException;
 import com.bytestorm.waygo.domain.exception.RotaNaoEncontradaException;
 import com.bytestorm.waygo.domain.interfaces.EstacaoRepository;
 import com.bytestorm.waygo.domain.service.CalculadoraRota;
-import com.bytestorm.waygo.domain.util.Textos;
 import com.bytestorm.waygo.domain.valueobject.ArestaRede;
 import com.bytestorm.waygo.domain.valueobject.CaminhoRota;
 import com.bytestorm.waygo.domain.valueobject.GrafoRede;
@@ -97,9 +96,8 @@ public class RotaService {
 			throw new RequisicaoInvalidaException("Há mais de uma estação com o nome \"" + nome.trim() + "\"");
 		}
 
-		String alvo = Textos.normalizar(nome);
 		boolean existe = estacaoRepository.listarTodas().stream()
-				.anyMatch(estacao -> Textos.normalizar(estacao.getNome()).equals(alvo));
+				.anyMatch(estacao -> estacao.possuiNome(nome));
 		throw existe
 				? new RotaNaoEncontradaException(
 						"A estação " + nome.trim() + " não é atendida por nenhuma linha em operação")

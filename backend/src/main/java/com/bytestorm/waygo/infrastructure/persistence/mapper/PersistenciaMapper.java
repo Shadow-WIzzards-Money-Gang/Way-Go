@@ -20,7 +20,7 @@ public final class PersistenciaMapper {
 	}
 
 	public static LinhaTransporte paraDominio(LinhaTransporteEntity entity) {
-		return new LinhaTransporte(entity.getId(), entity.getNome(), entity.getCodigo(), entity.getCor(),
+		return LinhaTransporte.reconstruir(entity.getId(), entity.getNome(), entity.getCodigo(), entity.getCor(),
 				entity.getOperadora(), entity.getTipoTransporte(), entity.isAtiva());
 	}
 
@@ -28,26 +28,26 @@ public final class PersistenciaMapper {
 		Coordenada coordenada = entity.getLatitude() != null && entity.getLongitude() != null
 				? new Coordenada(entity.getLatitude(), entity.getLongitude())
 				: null;
-		return new Estacao(entity.getId(), entity.getNome(), coordenada, entity.isAtiva());
+		return Estacao.reconstruir(entity.getId(), entity.getNome(), coordenada, entity.isAtiva());
 	}
 
 	public static LinhaEstacao paraDominio(LinhaEstacaoEntity entity) {
-		return new LinhaEstacao(entity.getId(), entity.getLinhaId(), entity.getEstacaoId(), entity.getSequencia(),
+		return LinhaEstacao.reconstruir(entity.getId(), entity.getLinhaId(), entity.getEstacaoId(), entity.getSequencia(),
 				entity.isAtiva());
 	}
 
 	public static ConexaoEstacao paraDominio(ConexaoEstacaoEntity entity) {
-		return new ConexaoEstacao(entity.getId(), entity.getLinhaEstacaoOrigemId(), entity.getLinhaEstacaoDestinoId(),
+		return ConexaoEstacao.reconstruir(entity.getId(), entity.getLinhaEstacaoOrigemId(), entity.getLinhaEstacaoDestinoId(),
 				entity.getTempoViagemSegundos(), entity.getDistanciaMetros(), entity.isAtiva());
 	}
 
 	public static Baldeacao paraDominio(BaldeacaoEntity entity) {
-		return new Baldeacao(entity.getId(), entity.getLinhaEstacaoOrigemId(), entity.getLinhaEstacaoDestinoId(),
+		return Baldeacao.reconstruir(entity.getId(), entity.getLinhaEstacaoOrigemId(), entity.getLinhaEstacaoDestinoId(),
 				entity.getTempoBaldeacaoSegundos(), entity.isAtiva());
 	}
 
 	public static LinhaStatus paraDominio(LinhaStatusEntity entity) {
-		return new LinhaStatus(entity.getId(), entity.getLinhaId(), entity.getStatus(), entity.getDescricao(),
+		return LinhaStatus.reconstruir(entity.getId(), entity.getLinhaId(), entity.getStatus(), entity.getDescricao(),
 				entity.getOrigem(), entity.getAtualizadoEm());
 	}
 

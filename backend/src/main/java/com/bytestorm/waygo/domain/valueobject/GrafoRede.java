@@ -16,7 +16,6 @@ import com.bytestorm.waygo.domain.entity.Estacao;
 import com.bytestorm.waygo.domain.entity.LinhaEstacao;
 import com.bytestorm.waygo.domain.entity.LinhaTransporte;
 import com.bytestorm.waygo.domain.enums.TipoConexao;
-import com.bytestorm.waygo.domain.util.Textos;
 
 public final class GrafoRede {
 
@@ -61,14 +60,14 @@ public final class GrafoRede {
 
 		Map<Long, List<ArestaRede>> arestas = new HashMap<>();
 		for (ConexaoEstacao conexao : conexoes) {
-			if (conexao.isAtiva() && conexao.getTempoViagemSegundos() != null) {
+			if (conexao.podeSerPercorrida()) {
 				adicionar(arestas, nos, new ArestaRede(conexao.getLinhaEstacaoOrigemId(),
 						conexao.getLinhaEstacaoDestinoId(), TipoConexao.CONEXAO, conexao.getTempoViagemSegundos(),
 						valorOuZero(conexao.getDistanciaMetros())));
 			}
 		}
 		for (Baldeacao baldeacao : baldeacoes) {
-			if (baldeacao.isAtiva() && baldeacao.getTempoBaldeacaoSegundos() != null) {
+			if (baldeacao.podeSerUtilizada()) {
 				adicionar(arestas, nos, new ArestaRede(baldeacao.getLinhaEstacaoOrigemId(),
 						baldeacao.getLinhaEstacaoDestinoId(), TipoConexao.BALDEACAO,
 						baldeacao.getTempoBaldeacaoSegundos(), 0));
@@ -121,9 +120,8 @@ public final class GrafoRede {
 
 	/** Estações atendidas pelo grafo cujo nome normalizado (sem acentos/caixa) é igual ao informado. */
 	public List<Estacao> estacoesPorNome(String nome) {
-		String alvo = Textos.normalizar(nome);
 		return estacoes.values().stream()
-				.filter(estacao -> Textos.normalizar(estacao.getNome()).equals(alvo))
+				.filter(estacao -> estacao.possuiNome(nome))
 				.toList();
 	}
 

@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import com.bytestorm.waygo.application.cache.StatusLinhasCache;
 import com.bytestorm.waygo.domain.entity.LinhaStatus;
-import com.bytestorm.waygo.domain.enums.OrigemStatus;
 import com.bytestorm.waygo.domain.enums.StatusOperacional;
 import com.bytestorm.waygo.domain.interfaces.FonteStatusLinhas;
 import com.bytestorm.waygo.domain.interfaces.LinhaStatusRepository;
@@ -46,8 +45,8 @@ public class AtualizacaoStatusLinhaService {
 				continue;
 			}
 
-			linhaStatusRepository.salvar(new LinhaStatus(null, linhaId.get(), externo.status(), externo.descricao(),
-					OrigemStatus.API, agora));
+			linhaStatusRepository.salvar(
+					LinhaStatus.registrarPelaApi(linhaId.get(), externo.status(), externo.descricao(), agora));
 			cache.registrar(linhaId.get(), externo.status());
 			log.info("Linha {} mudou de status: {} -> {}", externo.codigoLinha(),
 					atual.map(Enum::name).orElse("(sem status)"), externo.status());
