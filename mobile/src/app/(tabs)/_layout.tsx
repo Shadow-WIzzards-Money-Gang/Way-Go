@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router/js-tabs';
-import { Activity, Bookmark, Map, TrainFront } from 'lucide-react-native';
+import { Bookmark, Map, MapPin, TrainFront } from 'lucide-react-native';
 
 import { colors } from '@/theme/colors';
 
@@ -18,10 +18,10 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="status"
+        name="estacoes"
         options={{
-          title: 'Status',
-          tabBarIcon: ({ color, size }) => <Activity color={color} size={size} />,
+          title: 'Estações',
+          tabBarIcon: ({ color, size }) => <MapPin color={color} size={size} />,
         }}
       />
       <Tabs.Screen

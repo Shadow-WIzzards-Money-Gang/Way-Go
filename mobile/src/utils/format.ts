@@ -44,6 +44,29 @@ export function formatarDias(dias: readonly number[]): string {
   return `${rotulos.slice(0, -1).join(', ')} e ${rotulos[rotulos.length - 1]}`;
 }
 
+const MESES = [
+  'janeiro',
+  'fevereiro',
+  'março',
+  'abril',
+  'maio',
+  'junho',
+  'julho',
+  'agosto',
+  'setembro',
+  'outubro',
+  'novembro',
+  'dezembro',
+] as const;
+
+/** "2026-11-12T09:30:00" -> "12 de novembro de 2026". Retorna null se a data for inválida. */
+export function formatarData(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const data = new Date(iso);
+  if (Number.isNaN(data.getTime())) return null;
+  return `${data.getDate()} de ${MESES[data.getMonth()]} de ${data.getFullYear()}`;
+}
+
 /** Valida "HH:mm" (24h). */
 export function ehHorarioValido(valor: string): boolean {
   return /^([01]\d|2[0-3]):[0-5]\d$/.test(valor);

@@ -3,7 +3,14 @@ import { isAxiosError } from 'axios';
 import type { ErroResponse } from '@/types/api';
 
 export type TipoErroApi =
-  'rede' | 'timeout' | 'nao-encontrado' | 'sem-rota' | 'invalido' | 'servidor';
+  | 'rede'
+  | 'timeout'
+  | 'nao-autorizado'
+  | 'nao-encontrado'
+  | 'conflito'
+  | 'sem-rota'
+  | 'invalido'
+  | 'servidor';
 
 /** Erro normalizado da API: telas só lidam com este tipo, nunca com AxiosError. */
 export class ApiError extends Error {
@@ -19,7 +26,9 @@ export class ApiError extends Error {
 }
 
 function tipoPorStatus(status: number): TipoErroApi {
+  if (status === 401) return 'nao-autorizado';
   if (status === 404) return 'nao-encontrado';
+  if (status === 409) return 'conflito';
   if (status === 422) return 'sem-rota';
   if (status >= 400 && status < 500) return 'invalido';
   return 'servidor';
@@ -40,8 +49,9 @@ export function paraApiError(erro: unknown): ApiError {
       return new ApiError('Não foi possível conectar ao servidor. Verifique sua conexão.', 'rede');
     }
     const { status, data } = erro.response;
-    const mensagem =
-      ehErroResponse(data) && data.message ? data.message : 'Algo deu errado no servidor.';
+    const padrao =
+      status === 401 ? 'Você precisa entrar na sua conta para continuar.' : 'Algo deu errado no servidor.';
+    const mensagem = ehErroResponse(data) && data.message ? data.message : padrao;
     return new ApiError(mensagem, tipoPorStatus(status), status);
   }
 

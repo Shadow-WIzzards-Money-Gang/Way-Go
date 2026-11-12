@@ -1,22 +1,23 @@
 import { useEffect, useRef } from 'react';
 
 import { notificarAgora } from '@/services/notifications';
-import { useRotasSalvas } from '@/store/rotasSalvas';
+import { useRotasLocais } from '@/store/rotasLocais';
 import type { StatusOperacional } from '@/types/api';
 import { infoStatus } from '@/utils/status';
 import { formatarNomeLinha } from '@/utils/text';
 
 import { useRede } from './queries';
+import { useRotasDoUsuario } from './useRotasDoUsuario';
 
 /**
  * Enquanto o app está aberto, compara o status das linhas das rotas salvas a cada
  * atualização de /rede e dispara uma notificação local quando algum muda.
- * Montado uma única vez no layout raiz.
+ * Montado uma única vez no layout raiz; sem login não há rotas, então não alerta.
  */
 export function useAlertasRotas(): void {
   const { data: rede } = useRede();
-  const rotas = useRotasSalvas((s) => s.rotas);
-  const alertasAtivos = useRotasSalvas((s) => s.alertasAtivos);
+  const { rotas } = useRotasDoUsuario();
+  const alertasAtivos = useRotasLocais((s) => s.alertasAtivos);
   const anteriores = useRef<Map<number, StatusOperacional> | null>(null);
 
   useEffect(() => {
@@ -25,7 +26,7 @@ export function useAlertasRotas(): void {
     const antes = anteriores.current;
     anteriores.current = atuais;
 
-    if (!antes || !alertasAtivos) return;
+    if (!antes || !alertasAtivos || rotas.length === 0) return;
 
     const linhasMonitoradas = new Set(rotas.flatMap((r) => r.linhas.map((l) => l.id)));
     for (const linha of rede.linhas) {

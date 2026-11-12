@@ -6,8 +6,11 @@ import Stack from 'expo-router/stack';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { definirAoNaoAutorizado } from '@/api/client';
 import { useAlertasRotas } from '@/hooks/useAlertasRotas';
+import { abrirLogin, descartarRotasAntigasDoAparelho, descartarSessaoExpirada } from '@/lib/conta';
 import { configurarFocoDoApp, queryClient } from '@/lib/queryClient';
+import { useSessao } from '@/store/sessao';
 import { colors } from '@/theme/colors';
 
 const tema = {
@@ -27,8 +30,20 @@ function AlertasDeRotas() {
   return null;
 }
 
+/** Qualquer 401 de um endpoint protegido abre o login (com aviso se a sessão expirou). */
+function tratarNaoAutorizado() {
+  const tinhaSessao = useSessao.getState().sessao !== null;
+  void descartarSessaoExpirada();
+  abrirLogin({ motivo: tinhaSessao ? 'sessao-expirada' : 'restrito' });
+}
+
 export default function RootLayout() {
   useEffect(() => configurarFocoDoApp(), []);
+  useEffect(() => {
+    void useSessao.getState().carregar();
+    void descartarRotasAntigasDoAparelho();
+    return definirAoNaoAutorizado(tratarNaoAutorizado);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -44,6 +59,12 @@ export default function RootLayout() {
           <Stack.Screen
             name="rota-salva"
             options={{ presentation: 'modal', headerShown: true, title: 'Rota salva' }}
+          />
+          <Stack.Screen name="login" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="cadastro" options={{ presentation: 'modal' }} />
+          <Stack.Screen
+            name="conta"
+            options={{ presentation: 'modal', headerShown: true, title: 'Minha conta' }}
           />
         </Stack>
       </ThemeProvider>

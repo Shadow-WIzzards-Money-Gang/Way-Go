@@ -9,6 +9,17 @@ export function contemTexto(alvo: string, busca: string): boolean {
   return termo === '' || normalizar(alvo).includes(termo);
 }
 
+/** "ana@email.com" -> "A". Usa o primeiro caractere alfanumérico; sem nenhum, "?". */
+export function inicialDoEmail(email: string | null | undefined): string {
+  const caractere = normalizar(email ?? '').match(/[\p{L}\p{N}]/u)?.[0];
+  return caractere ? caractere.toUpperCase() : '?';
+}
+
+/** Validação simples de formato, só para orientar o usuário antes de chamar a API. */
+export function ehEmailValido(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
 /** "Linha 11 - Coral" -> "Linha 11 – Coral" (traço tipográfico, como nos protótipos). */
 export function formatarNomeLinha(nome: string): string {
   return nome.replace(/\s+-\s+/, ' – ');

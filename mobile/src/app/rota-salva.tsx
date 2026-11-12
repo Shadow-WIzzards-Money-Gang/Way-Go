@@ -1,27 +1,30 @@
+import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Switch,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Bookmark } from 'lucide-react-native';
+import { useState } from 'react';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ApiError } from '@/api/errors';
+import { ConviteLogin } from '@/components/ConviteLogin';
 import { LinhaBadge } from '@/components/LinhaBadge';
+import { AlertaErro } from '@/components/ui/AlertaErro';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
-import { useRota } from '@/hooks/queries';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { TextField } from '@/components/ui/TextField';
+import { useAtualizarRota, useRota, useSalvarRota } from '@/hooks/queries';
+import { type RotaDoUsuario, useRotasDoUsuario } from '@/hooks/useRotasDoUsuario';
+import { hrefComParams } from '@/lib/conta';
 import { agendarLembretes } from '@/services/notifications';
-import { type RotaSalva, useRotasSalvas } from '@/store/rotasSalvas';
+import type { EstacaoSelecionada } from '@/store/planejamento';
+import { useRotasLocais } from '@/store/rotasLocais';
+import { useLogado } from '@/store/sessao';
 import { colors } from '@/theme/colors';
 import type { CriterioRota, LinhaDaEstacao } from '@/types/api';
 import { DIAS_DA_SEMANA, ehHorarioValido } from '@/utils/format';
+import { linhasDaRota } from '@/utils/rota';
 
 type Params = {
   id?: string;
@@ -41,23 +44,78 @@ function mascararHorario(texto: string): string {
   return digitos.length <= 2 ? digitos : `${digitos.slice(0, 2)}:${digitos.slice(2)}`;
 }
 
+function estacaoDosParams(id?: string, nome?: string): EstacaoSelecionada | null {
+  return id && nome ? { id: Number(id), nome } : null;
+}
+
 export default function RotaSalvaScreen() {
   const params = useLocalSearchParams<Params>();
-  const existente = useRotasSalvas((s) => s.rotas.find((r) => r.id === params.id));
-  const adicionar = useRotasSalvas((s) => s.adicionar);
-  const atualizar = useRotasSalvas((s) => s.atualizar);
+  const logado = useLogado();
+  const { rotas, isPending } = useRotasDoUsuario();
+  const existente = params.id ? rotas.find((r) => r.id === Number(params.id)) : undefined;
 
-  const origem =
-    existente?.origem ??
-    (params.origemId && params.origemNome
-      ? { id: Number(params.origemId), nome: params.origemNome }
-      : null);
-  const destino =
-    existente?.destino ??
-    (params.destinoId && params.destinoNome
-      ? { id: Number(params.destinoId), nome: params.destinoNome }
-      : null);
-  const criterio: CriterioRota = existente?.criterio ?? params.criterio ?? 'EQUILIBRADO';
+  if (!logado) {
+    return (
+      <SafeAreaView edges={['bottom']} className="flex-1 bg-background">
+        <Stack.Screen options={{ title: 'Salvar rota' }} />
+        <ConviteLogin
+          icone={Bookmark}
+          titulo="Entre para salvar esta rota"
+          mensagem="Suas rotas ficam guardadas na conta e aparecem em qualquer aparelho."
+          parametros={{
+            motivo: 'salvar-rota',
+            proximo: hrefComParams('/rota-salva', params),
+          }}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // Editando: espera a lista da conta carregar antes de concluir que a rota não existe.
+  if (params.id && !existente) {
+    return (
+      <SafeAreaView edges={['bottom']} className="flex-1 bg-background p-4">
+        {isPending ? (
+          <View className="gap-4">
+            <Skeleton className="h-24" />
+            <Skeleton className="h-14" />
+            <Skeleton className="h-24" />
+          </View>
+        ) : (
+          <View className="flex-1 items-center justify-center">
+            <Text className="text-center text-ink-muted">Rota não encontrada.</Text>
+            <Button rotulo="Voltar" variante="outline" onPress={() => router.back()} className="mt-4" />
+          </View>
+        )}
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <FormularioRota
+      // Remonta se a rota editada mudar, para o estado inicial do formulário valer.
+      key={existente?.id ?? 'nova'}
+      existente={existente}
+      origem={existente?.origem ?? estacaoDosParams(params.origemId, params.origemNome)}
+      destino={existente?.destino ?? estacaoDosParams(params.destinoId, params.destinoNome)}
+      criterio={existente?.criterio ?? params.criterio ?? 'EQUILIBRADO'}
+      agendarInicial={Boolean(existente?.agendamento) || params.agendar === '1'}
+    />
+  );
+}
+
+interface FormularioRotaProps {
+  existente: RotaDoUsuario | undefined;
+  origem: EstacaoSelecionada | null;
+  destino: EstacaoSelecionada | null;
+  criterio: CriterioRota;
+  agendarInicial: boolean;
+}
+
+function FormularioRota({ existente, origem, destino, criterio, agendarInicial }: FormularioRotaProps) {
+  const salvarRota = useSalvarRota();
+  const atualizarRota = useAtualizarRota();
+  const definirLocal = useRotasLocais((s) => s.definir);
 
   // Para rota nova, as linhas vêm do cálculo que já está em cache (feito no Mapa).
   const { data: rota } = useRota(
@@ -65,22 +123,15 @@ export default function RotaSalvaScreen() {
       ? { origem: origem.nome, destino: destino.nome, criterio }
       : null,
   );
-  const linhas: LinhaDaEstacao[] = useMemo(() => {
-    if (existente) return existente.linhas;
-    const unicas = new Map<number, LinhaDaEstacao>();
-    for (const t of rota?.trechos ?? []) {
-      const { id, nome, codigo, cor } = t.linha;
-      unicas.set(id, { id, nome, codigo, cor });
-    }
-    return [...unicas.values()];
-  }, [existente, rota]);
+  const linhas: LinhaDaEstacao[] = existente?.linhas.length ? existente.linhas : linhasDaRota(rota);
 
   const [nome, setNome] = useState(existente?.nome ?? '');
-  const [agendar, setAgendar] = useState(Boolean(existente?.agendamento) || params.agendar === '1');
+  const [agendar, setAgendar] = useState(agendarInicial);
   const [dias, setDias] = useState<number[]>(existente?.agendamento?.dias ?? DIAS_UTEIS);
   const [horario, setHorario] = useState(existente?.agendamento?.horario ?? '07:00');
   const [salvando, setSalvando] = useState(false);
   const [tentouSalvar, setTentouSalvar] = useState(false);
+  const [erroApi, setErroApi] = useState<string | null>(null);
 
   if (!origem || !destino) {
     return (
@@ -100,28 +151,45 @@ export default function RotaSalvaScreen() {
 
   const salvar = async () => {
     setTentouSalvar(true);
+    setErroApi(null);
     if (horarioInvalido || semDias) return;
 
     setSalvando(true);
     const dados = {
       nome: nome.trim() || nomePadrao,
-      origem,
-      destino,
+      idEstacaoOrigem: origem.id,
+      idEstacaoDestino: destino.id,
       criterio,
-      linhas,
-      agendamento: agendar ? { dias: [...dias].sort((a, b) => a - b), horario } : null,
     };
 
-    let salva: RotaSalva;
-    if (existente) {
-      atualizar(existente.id, dados);
-      salva = { ...existente, ...dados };
-    } else {
-      salva = adicionar(dados);
+    let salva;
+    try {
+      salva = existente
+        ? await atualizarRota.mutateAsync({ id: existente.id, dados })
+        : await salvarRota.mutateAsync(dados);
+    } catch (erro) {
+      setSalvando(false);
+      // 401 já abre o login; os demais erros aparecem no formulário.
+      if (erro instanceof ApiError && erro.tipo === 'nao-autorizado') return;
+      setErroApi(
+        erro instanceof ApiError ? erro.message : 'Não foi possível salvar a rota. Tente novamente.',
+      );
+      return;
     }
 
-    const permitido = await agendarLembretes(salva).catch(() => false);
+    const agendamento = agendar ? { dias: [...dias].sort((a, b) => a - b), horario } : null;
+    definirLocal(salva.id, { linhas, agendamento });
+
+    const permitido = await agendarLembretes({
+      rotaId: salva.id,
+      nome: salva.nome,
+      origem: salva.origem.nome,
+      destino: salva.destino.nome,
+      agendamento,
+    }).catch(() => false);
     setSalvando(false);
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
+
     if (agendar && !permitido) {
       Alert.alert(
         'Notificações desativadas',
@@ -155,20 +223,15 @@ export default function RotaSalvaScreen() {
             )}
           </Card>
 
-          <View>
-            <Text className="mb-1.5 text-sm font-medium text-ink">Nome da rota</Text>
-            <TextInput
-              value={nome}
-              onChangeText={setNome}
-              placeholder={nomePadrao}
-              placeholderTextColor={colors.ink.subtle}
-              maxLength={40}
-              returnKeyType="done"
-              accessibilityLabel="Nome da rota"
-              className="min-h-[48px] rounded-xl border border-border bg-surface px-3 text-base text-ink"
-            />
-            <Text className="mt-1 text-xs text-ink-subtle">Ex.: Casa → Trabalho, Faculdade</Text>
-          </View>
+          <TextField
+            rotulo="Nome da rota"
+            dica="Ex.: Casa → Trabalho, Faculdade"
+            value={nome}
+            onChangeText={setNome}
+            placeholder={nomePadrao}
+            maxLength={40}
+            returnKeyType="done"
+          />
 
           <Card>
             <View className="flex-row items-center justify-between gap-3">
@@ -204,29 +267,21 @@ export default function RotaSalvaScreen() {
                     <Text className="mt-1.5 text-xs text-danger">Escolha ao menos um dia.</Text>
                   )}
                 </View>
-                <View>
-                  <Text className="mb-1.5 text-sm font-medium text-ink">Horário</Text>
-                  <TextInput
-                    value={horario}
-                    onChangeText={(t) => setHorario(mascararHorario(t))}
-                    keyboardType="number-pad"
-                    placeholder="07:10"
-                    placeholderTextColor={colors.ink.subtle}
-                    maxLength={5}
-                    accessibilityLabel="Horário no formato horas e minutos"
-                    className={`min-h-[48px] w-28 rounded-xl border bg-surface px-3 text-base text-ink ${
-                      tentouSalvar && horarioInvalido ? 'border-danger' : 'border-border'
-                    }`}
-                  />
-                  {tentouSalvar && horarioInvalido && (
-                    <Text className="mt-1.5 text-xs text-danger">
-                      Use o formato HH:mm, ex.: 07:10.
-                    </Text>
-                  )}
-                </View>
+                <TextField
+                  rotulo="Horário"
+                  value={horario}
+                  onChangeText={(t) => setHorario(mascararHorario(t))}
+                  keyboardType="number-pad"
+                  placeholder="07:10"
+                  maxLength={5}
+                  erro={tentouSalvar && horarioInvalido ? 'Use o formato HH:mm, ex.: 07:10.' : null}
+                  className="w-32"
+                />
               </View>
             )}
           </Card>
+
+          {erroApi && <AlertaErro mensagem={erroApi} />}
         </ScrollView>
 
         <View className="border-t border-border bg-surface p-4">

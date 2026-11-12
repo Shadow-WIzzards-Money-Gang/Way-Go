@@ -154,3 +154,50 @@ export interface RotaParams {
   destino: string;
   criterio?: CriterioRota;
 }
+
+// --- Conta e acesso ---
+
+export type Role = 'USUARIO' | 'MODERADOR' | 'ADMINISTRADOR';
+
+export interface LoginRequest {
+  email: string;
+  senha: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  tipo: string;
+  /** Instant ISO-8601 em UTC (com "Z"). */
+  expiraEm: string;
+  expiraEmSegundos: number;
+}
+
+export type RegistroRequest = LoginRequest;
+
+export interface RegistroResponse {
+  id: string;
+  email: string;
+  roles: Role[];
+  criadoEm: string;
+}
+
+/** Resposta de GET /usuarios/me (assumida com o mesmo formato do RegistroResponse). */
+export type UsuarioAtual = RegistroResponse;
+
+// --- Rotas salvas (US08-US10) ---
+
+export interface RotaSalvaRequest {
+  nome: string;
+  idEstacaoOrigem: number;
+  idEstacaoDestino: number;
+  criterio?: CriterioRota;
+}
+
+export interface RotaSalvaResponse {
+  id: number;
+  nome: string;
+  origem: EstacaoResumo;
+  destino: EstacaoResumo;
+  criterio: CriterioRota;
+  criadoEm: string;
+}

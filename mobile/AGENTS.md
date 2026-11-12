@@ -46,15 +46,18 @@ npx expo-doctor             # diagnóstico de dependências e configuração
 ```
 src/
   app/                  # rotas do Expo Router (cada arquivo é uma tela)
-    _layout.tsx         # providers (React Query, tema) + Stack raiz e modais
-    (tabs)/             # Status · Linhas · Mapa (index) · Rotas
+    _layout.tsx         # providers (React Query, tema), sessão, tratamento de 401 + Stack raiz e modais
+    (tabs)/             # Estações · Linhas · Mapa (index) · Rotas
+    (tabs)/estacoes/    # lista de estações + [id] (linhas, status e "Sair daqui"/"Ir para cá")
     (tabs)/linhas/      # lista de linhas + [id] (timeline de estações)
     selecionar-estacao.tsx, rota-salva.tsx   # modais
+    login.tsx, cadastro.tsx, conta.tsx       # modais da conta
   api/                  # cliente axios, ApiError e funções tipadas por endpoint
   config/env.ts         # leitura e validação do .env
   types/api.ts          # espelho dos DTOs Java do backend
   hooks/                # queries do React Query e hooks de domínio
-  store/                # estado do cliente (zustand): planejamento e rotas salvas (AsyncStorage)
+  store/                # estado do cliente (zustand): planejamento, sessão (token) e dados locais das rotas
+  lib/                  # query client, armazenamento seguro e ações da conta (abrir login, sair)
   services/             # integrações do dispositivo (notificações)
   components/           # componentes de domínio
   components/ui/        # primitivos visuais (Button, Card, Badge, Chip, Skeleton, States...)
@@ -74,9 +77,17 @@ Fluxo de dados: **tela → hook (`src/hooks/queries.ts`) → função da API (`s
 ### Dados e API
 - Somente `src/api/` usa o axios. Telas e componentes consomem dados por hooks do React Query.
 - As chaves de query ficam centralizadas em `queryKeys` (`src/hooks/queries.ts`).
-- Os erros chegam como `ApiError` (tipos `rede`, `timeout`, `nao-encontrado`, `sem-rota`, `invalido`, `servidor`). Trate pelo `tipo`, não pelo texto. O `ErroResponse` do backend vem em `message`.
+- Os erros chegam como `ApiError` (tipos `rede`, `timeout`, `nao-autorizado`, `nao-encontrado`, `conflito`, `sem-rota`, `invalido`, `servidor`). Trate pelo `tipo`, não pelo texto. O `ErroResponse` do backend vem em `message`.
 - Para o status das linhas, prefira `/rede`: uma chamada traz todas as linhas com `status`. Evite N chamadas a `/linhas/{id}/status`.
-- `/rotas` recebe **nomes** de estação (origem/destino), não ids.
+- `/rotas/calcular` recebe **nomes** de estação (origem/destino), não ids. Já as rotas salvas (`/rotas`, `/rotas/{id}`) usam **ids** de estação.
+
+### Sessão e conta
+- O token JWT fica no armazenamento seguro do aparelho (`expo-secure-store`, via `lib/armazenamentoSeguro.ts`; na web, AsyncStorage) e é lido só por `store/sessao.ts`.
+- **Só `api/client.ts` envia o token** (interceptor `Authorization: Bearer`). Telas nunca montam o header.
+- Um 401 fora de `/auth/*` chama o handler registrado em `app/_layout.tsx`: descarta a sessão e abre o login (com aviso de sessão expirada). Telas não precisam tratar 401, só ignorar o erro `nao-autorizado`.
+- Queries que dependem do usuário ficam sob a chave `['conta', ...]` com `enabled: logado`. Ao sair, `encerrarSessao()` (`lib/conta.ts`) descarta essas queries.
+- Para mandar alguém ao login a partir de uma ação, use `abrirLogin({ motivo, proximo })`. O `proximo` é o href para onde ir depois de entrar.
+- Funções que exigem conta mostram `ConviteLogin` para visitantes, em vez de um erro.
 
 ### UI/UX
 - Estilize apenas com classes NativeWind e os tokens do `tailwind.config.js` (`bg-background`, `text-ink-muted`, `bg-primary`, `bg-warning-soft`...). Não use hex soltos. Quando a cor precisa estar em JS (ícones, mapa), importe de `@/theme/colors`. A cor das linhas vem da API (`linha.cor`) e vai em `style`.
@@ -107,7 +118,8 @@ Fluxo de dados: **tela → hook (`src/hooks/queries.ts`) → função da API (`s
 
 ## Pendências conhecidas (TODO)
 
-- **Rotas salvas só no aparelho** (`src/store/rotasSalvas.ts`, AsyncStorage). Quando o backend tiver endpoint, troque por queries/mutations em `src/api`.
+- **Agendamento das rotas é só local** (`src/store/rotasLocais.ts`, lembrete no aparelho vinculado ao id da rota no servidor). As linhas de cada rota também ficam ali, porque o `RotaSalvaResponse` não as traz. Quando o backend expuser rotas agendadas, troque por queries/mutations.
+- **`GET /usuarios/me` foi assumido** com o formato do `RegistroResponse` (`id`, `email`, `roles`, `criadoEm`). Se o endpoint não responder, a tela "Minha conta" mostra só o e-mail da sessão.
 - **"Relatar" na tela da linha** mostra um aviso "em breve": falta endpoint no backend.
 - **Alertas de mudança de status** só disparam com o app aberto (comparação a cada atualização de `/rede`). Para receber em segundo plano, é preciso push no backend.
 - O mapa não roda na web (`MapaRede.web.tsx` mostra um aviso no lugar).

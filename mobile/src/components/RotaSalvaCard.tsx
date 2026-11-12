@@ -2,7 +2,7 @@ import { Clock, Pencil, Trash2 } from 'lucide-react-native';
 import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import type { RotaSalva } from '@/store/rotasSalvas';
+import type { RotaDoUsuario } from '@/hooks/useRotasDoUsuario';
 import { colors } from '@/theme/colors';
 import { formatarDias } from '@/utils/format';
 import type { StatusRota } from '@/utils/status';
@@ -12,17 +12,19 @@ import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
 
 interface RotaSalvaCardProps {
-  rota: RotaSalva;
+  rota: RotaDoUsuario;
   status: StatusRota;
-  aoAbrir: (rota: RotaSalva) => void;
-  aoEditar: (rota: RotaSalva) => void;
-  aoAgendar: (rota: RotaSalva) => void;
-  aoExcluir: (rota: RotaSalva) => void;
+  excluindo?: boolean;
+  aoAbrir: (rota: RotaDoUsuario) => void;
+  aoEditar: (rota: RotaDoUsuario) => void;
+  aoAgendar: (rota: RotaDoUsuario) => void;
+  aoExcluir: (rota: RotaDoUsuario) => void;
 }
 
 export const RotaSalvaCard = memo(function RotaSalvaCard({
   rota,
   status,
+  excluindo = false,
   aoAbrir,
   aoEditar,
   aoAgendar,
@@ -33,9 +35,12 @@ export const RotaSalvaCard = memo(function RotaSalvaCard({
     : 'Sem agendamento';
 
   return (
-    <View className="mb-3 rounded-2xl border border-border bg-surface">
+    <View
+      className={`mb-3 rounded-2xl border border-border bg-surface ${excluindo ? 'opacity-60' : ''}`}
+    >
       <Pressable
         onPress={() => aoAbrir(rota)}
+        disabled={excluindo}
         accessibilityRole="button"
         accessibilityLabel={`${rota.nome}, ${rota.origem.nome} para ${rota.destino.nome}, ${status.rotulo}`}
         accessibilityHint="Mostra a rota no mapa"
@@ -67,6 +72,7 @@ export const RotaSalvaCard = memo(function RotaSalvaCard({
           variante="ghost"
           icone={Pencil}
           compacto
+          desabilitado={excluindo}
           onPress={() => aoEditar(rota)}
         />
         <Button
@@ -74,13 +80,15 @@ export const RotaSalvaCard = memo(function RotaSalvaCard({
           variante="ghost"
           icone={Clock}
           compacto
+          desabilitado={excluindo}
           onPress={() => aoAgendar(rota)}
         />
         <Button
-          rotulo="Excluir"
+          rotulo={excluindo ? 'Excluindo' : 'Excluir'}
           variante="danger"
           icone={Trash2}
           compacto
+          carregando={excluindo}
           onPress={() => aoExcluir(rota)}
         />
       </View>

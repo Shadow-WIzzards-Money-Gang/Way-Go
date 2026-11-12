@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { SearchX } from 'lucide-react-native';
 import { useCallback, useMemo, useState } from 'react';
-import { FlatList, RefreshControl, Text, View } from 'react-native';
+import { FlatList, RefreshControl, View } from 'react-native';
 
+import { CabecalhoAba } from '@/components/CabecalhoAba';
 import { LinhaStatusItem } from '@/components/LinhaStatusItem';
 import { Chip } from '@/components/ui/Chip';
 import { Screen } from '@/components/ui/Screen';
@@ -46,9 +47,7 @@ export default function LinhasScreen() {
   return (
     <Screen>
       <View className="gap-3 px-4 pb-3 pt-4">
-        <Text className="text-3xl font-bold text-ink" accessibilityRole="header">
-          Linhas
-        </Text>
+        <CabecalhoAba titulo="Linhas" />
         <SearchInput
           valor={busca}
           aoMudar={setBusca}
