@@ -29,5 +29,5 @@ export const estacoesApi = {
 };
 
 export const rotasApi = {
-  calcular: (params: RotaParams) => api.get<Rota>('/rotas', { params }).then((r) => r.data),
+  calcular: (params: RotaParams) => api.get<Rota>('/rotas/calcular', { params }).then((r) => r.data),
 };
