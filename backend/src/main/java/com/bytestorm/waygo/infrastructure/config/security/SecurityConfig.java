@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -18,6 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -31,7 +33,7 @@ public class SecurityConfig {
                 auth.requestMatchers(HttpMethod.GET, "/api/v1/linhas/**").permitAll();
                 auth.requestMatchers(HttpMethod.GET, "/api/v1/estacoes/**").permitAll();
                 auth.requestMatchers(HttpMethod.GET, "/api/v1/rede").permitAll();
-                auth.requestMatchers(HttpMethod.GET, "/api/v1/rotas").permitAll();
+                auth.requestMatchers(HttpMethod.GET, "/api/v1/rotas/calcular").permitAll();
                 auth.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs").permitAll();
                 auth.requestMatchers("/error").permitAll();
                 auth.anyRequest().authenticated();
