@@ -23,7 +23,7 @@ public class RotaController {
 		this.rotaService = rotaService;
 	}
 
-	@GetMapping
+	@GetMapping("/calcular")
 	public ResponseEntity<RotaResponse> calcular(@Valid @ParameterObject @ModelAttribute RotaRequest request) {
 		return ResponseEntity.ok(rotaService.calcular(request));
 	}
