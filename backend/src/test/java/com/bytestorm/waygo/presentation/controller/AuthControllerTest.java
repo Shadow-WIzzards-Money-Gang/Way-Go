@@ -3,8 +3,10 @@ package com.bytestorm.waygo.presentation.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -137,6 +139,14 @@ class AuthControllerTest {
 				.andExpect(status().isUnauthorized());
 		mockMvc.perform(post("/api/v1/rotas"))
 				.andExpect(status().isUnauthorized());
+		mockMvc.perform(get("/api/v1/rotas"))
+				.andExpect(status().isUnauthorized());
+		mockMvc.perform(get("/api/v1/rotas/1"))
+				.andExpect(status().isUnauthorized());
+		mockMvc.perform(put("/api/v1/rotas/1"))
+				.andExpect(status().isUnauthorized());
+		mockMvc.perform(delete("/api/v1/rotas/1"))
+				.andExpect(status().isUnauthorized());
 	}
 
 	/** Consultas públicas passam pela segurança sem token; o 404 vem só de o controller não estar neste teste. */
@@ -145,7 +155,7 @@ class AuthControllerTest {
 		mockMvc.perform(get("/api/v1/rede")).andExpect(status().isNotFound());
 		mockMvc.perform(get("/api/v1/linhas/11/status")).andExpect(status().isNotFound());
 		mockMvc.perform(get("/api/v1/estacoes")).andExpect(status().isNotFound());
-		mockMvc.perform(get("/api/v1/rotas")).andExpect(status().isNotFound());
+		mockMvc.perform(get("/api/v1/rotas/calcular")).andExpect(status().isNotFound());
 	}
 
 }
