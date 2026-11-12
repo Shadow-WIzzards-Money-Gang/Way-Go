@@ -34,6 +34,8 @@ public class SecurityConfig {
                 auth.requestMatchers(HttpMethod.GET, "/api/v1/estacoes/**").permitAll();
                 auth.requestMatchers(HttpMethod.GET, "/api/v1/rede").permitAll();
                 auth.requestMatchers(HttpMethod.GET, "/api/v1/rotas/calcular").permitAll();
+                
+                auth.requestMatchers("/api/v1/rotas", "/api/v1/rotas/**").authenticated();
                 auth.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs").permitAll();
                 auth.requestMatchers("/error").permitAll();
                 auth.anyRequest().authenticated();
