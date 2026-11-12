@@ -1,5 +1,6 @@
 package com.bytestorm.waygo.infrastructure.persistence.mapper;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -9,6 +10,8 @@ import com.bytestorm.waygo.domain.entity.Estacao;
 import com.bytestorm.waygo.domain.entity.LinhaEstacao;
 import com.bytestorm.waygo.domain.entity.LinhaStatus;
 import com.bytestorm.waygo.domain.entity.LinhaTransporte;
+import com.bytestorm.waygo.domain.entity.RotaAgendada;
+import com.bytestorm.waygo.domain.entity.RotaSalva;
 import com.bytestorm.waygo.domain.entity.Usuario;
 import com.bytestorm.waygo.domain.valueobject.Coordenada;
 import com.bytestorm.waygo.infrastructure.persistence.entity.BaldeacaoEntity;
@@ -18,6 +21,8 @@ import com.bytestorm.waygo.infrastructure.persistence.entity.LinhaEstacaoEntity;
 import com.bytestorm.waygo.infrastructure.persistence.entity.LinhaStatusEntity;
 import com.bytestorm.waygo.infrastructure.persistence.entity.LinhaTransporteEntity;
 import com.bytestorm.waygo.infrastructure.persistence.entity.RoleEntity;
+import com.bytestorm.waygo.infrastructure.persistence.entity.RotaAgendadaEntity;
+import com.bytestorm.waygo.infrastructure.persistence.entity.RotaSalvaEntity;
 import com.bytestorm.waygo.infrastructure.persistence.entity.UsuarioEntity;
 
 public final class PersistenciaMapper {
@@ -70,6 +75,28 @@ public final class PersistenciaMapper {
 	public static UsuarioEntity paraEntity(Usuario usuario, Set<RoleEntity> roles) {
 		return new UsuarioEntity(usuario.getId(), usuario.getEmail(), usuario.getSenhaHash(), usuario.getCriadoEm(),
 				roles);
+	}
+
+	public static RotaSalva paraDominio(RotaSalvaEntity entity) {
+		return RotaSalva.reconstruir(entity.getId(), entity.getIdEstacaoOrigem(), entity.getIdEstacaoDestino(),
+				entity.getNome(), entity.getCriterio(), entity.getIdUsuario(), entity.getCriadoEm());
+	}
+
+	public static RotaSalvaEntity paraEntity(RotaSalva rotaSalva) {
+		return new RotaSalvaEntity(rotaSalva.getId(), rotaSalva.getNome(), rotaSalva.getIdEstacaoOrigem(),
+				rotaSalva.getIdEstacaoDestino(), rotaSalva.getCriterioRota(), rotaSalva.getIdUsuario(),
+				rotaSalva.getCriadoEm());
+	}
+
+	public static RotaAgendada paraDominio(RotaAgendadaEntity entity) {
+		return RotaAgendada.reconstruir(entity.getId(), entity.getIdRotaSalva(), entity.getHorarioPartidaMinutos(),
+				entity.getAntecedenciaMinutos(), entity.isAtiva(), entity.getDiasSemana(), entity.getCriadoEm());
+	}
+
+	public static RotaAgendadaEntity paraEntity(RotaAgendada rotaAgendada) {
+		return new RotaAgendadaEntity(rotaAgendada.getId(), rotaAgendada.getIdRotaSalva(),
+				rotaAgendada.getHorarioPartidaMinutos(), rotaAgendada.getAntecedenciaMinutos(), rotaAgendada.isAtiva(),
+				rotaAgendada.getCriadoEm(), new HashSet<>(rotaAgendada.getDiasSemana()));
 	}
 
 }
