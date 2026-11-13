@@ -6,6 +6,7 @@ export type TipoErroApi =
   | 'rede'
   | 'timeout'
   | 'nao-autorizado'
+  | 'proibido'
   | 'nao-encontrado'
   | 'conflito'
   | 'sem-rota'
@@ -27,6 +28,7 @@ export class ApiError extends Error {
 
 function tipoPorStatus(status: number): TipoErroApi {
   if (status === 401) return 'nao-autorizado';
+  if (status === 403) return 'proibido';
   if (status === 404) return 'nao-encontrado';
   if (status === 409) return 'conflito';
   if (status === 422) return 'sem-rota';
@@ -50,7 +52,11 @@ export function paraApiError(erro: unknown): ApiError {
     }
     const { status, data } = erro.response;
     const padrao =
-      status === 401 ? 'Você precisa entrar na sua conta para continuar.' : 'Algo deu errado no servidor.';
+      status === 401
+        ? 'Você precisa entrar na sua conta para continuar.'
+        : status === 403
+          ? 'Sua conta não tem permissão para esta ação.'
+          : 'Algo deu errado no servidor.';
     const mensagem = ehErroResponse(data) && data.message ? data.message : padrao;
     return new ApiError(mensagem, tipoPorStatus(status), status);
   }

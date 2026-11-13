@@ -19,4 +19,6 @@ public interface EstacaoRepository {
 
 	boolean existePorId(Long id);
 
+	Estacao salvar(Estacao estacao);
+
 }

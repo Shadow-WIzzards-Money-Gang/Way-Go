@@ -44,6 +44,10 @@ public class GrafoRedeCache {
 		this.intervaloRecarga = intervaloRecarga;
 	}
 
+	public synchronized void invalidar() {
+		grafo = null;
+	}
+
 	public synchronized GrafoRede obter() {
 		Instant agora = clock.instant();
 		if (grafo == null || !agora.isBefore(carregadoEm.plus(intervaloRecarga))) {

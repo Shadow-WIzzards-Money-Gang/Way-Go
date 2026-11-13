@@ -70,6 +70,11 @@ class EstacaoServiceTest {
 		public boolean existePorId(Long id) {
 			return buscarPorId(id).isPresent();
 		}
+
+		@Override
+		public Estacao salvar(Estacao estacao) {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	@Test

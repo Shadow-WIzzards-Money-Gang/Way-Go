@@ -39,4 +39,12 @@ public class EstacaoEntity {
 	@Column(name = "ATIVA", nullable = false)
 	private boolean ativa;
 
+	public EstacaoEntity(Long id, String nome, BigDecimal latitude, BigDecimal longitude, boolean ativa) {
+		this.id = id;
+		this.nome = nome;
+		this.latitude = latitude;
+		this.longitude = longitude;
+		this.ativa = ativa;
+	}
+
 }

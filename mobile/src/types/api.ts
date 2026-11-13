@@ -204,8 +204,46 @@ export interface RegistroResponse {
   criadoEm: string;
 }
 
-/** Resposta de GET /usuarios/me (assumida com o mesmo formato do RegistroResponse). */
-export type UsuarioAtual = RegistroResponse;
+/** Uma conta: GET /usuarios/me (a do usuário logado) e GET /usuarios (admin). */
+export interface Usuario {
+  id: string;
+  email: string;
+  roles: Role[];
+  criadoEm: string;
+}
+
+export type UsuarioAtual = Usuario;
+
+// --- Administração (exigem a role ADMINISTRADOR) ---
+
+export interface LinhaRequest {
+  nome: string;
+  codigo: string;
+  cor?: string;
+  operadora: string;
+  tipoTransporte: TipoTransporte;
+}
+
+/** Campos omitidos mantêm o valor atual. Código e tipo não mudam. */
+export interface LinhaAtualizacaoRequest {
+  nome?: string;
+  cor?: string;
+  operadora?: string;
+  ativa?: boolean;
+}
+
+export interface StatusLinhaRequest {
+  status: StatusOperacional;
+  descricao?: string;
+}
+
+/** Latitude e longitude andam juntas. Na atualização, campos omitidos mantêm o valor atual. */
+export interface EstacaoRequest {
+  nome?: string;
+  latitude?: number;
+  longitude?: number;
+  ativa?: boolean;
+}
 
 // --- Rotas salvas (US08-US10) ---
 
@@ -222,5 +260,32 @@ export interface RotaSalvaResponse {
   origem: EstacaoResumo;
   destino: EstacaoResumo;
   criterio: CriterioRota;
+  criadoEm: string;
+}
+
+// --- Agendamentos das rotas salvas (vários por rota) ---
+
+export type DiaSemana = 'DOMINGO' | 'SEGUNDA' | 'TERCA' | 'QUARTA' | 'QUINTA' | 'SEXTA' | 'SABADO';
+
+export interface RotaAgendadaRequest {
+  /** "HH:mm" */
+  horario: string;
+  /** 0 a 1440. Na criação, o padrão do backend é 5; no PUT, omitido mantém o atual. */
+  antecedenciaMinutos?: number;
+  diasSemana: DiaSemana[];
+  /** Na criação, o padrão é true; no PUT, omitido mantém o atual. */
+  ativa?: boolean;
+}
+
+export interface RotaAgendada {
+  id: number;
+  idRotaSalva: number;
+  /** "HH:mm" */
+  horario: string;
+  horarioPartidaMinutos: number;
+  antecedenciaMinutos: number;
+  /** Ordenados de domingo a sábado. */
+  diasSemana: DiaSemana[];
+  ativa: boolean;
   criadoEm: string;
 }

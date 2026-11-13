@@ -4,7 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import type { RotaDoUsuario } from '@/hooks/useRotasDoUsuario';
 import { colors } from '@/theme/colors';
-import { formatarDias } from '@/utils/format';
+import { resumoAgendamentos } from '@/utils/agendamento';
 import type { StatusRota } from '@/utils/status';
 
 import { LinhaBadge } from './LinhaBadge';
@@ -30,9 +30,7 @@ export const RotaSalvaCard = memo(function RotaSalvaCard({
   aoAgendar,
   aoExcluir,
 }: RotaSalvaCardProps) {
-  const agendamento = rota.agendamento
-    ? `${formatarDias(rota.agendamento.dias)} · ${rota.agendamento.horario}`
-    : 'Sem agendamento';
+  const agendamento = resumoAgendamentos(rota.agendamentos);
 
   return (
     <View

@@ -1,8 +1,12 @@
 import type {
   EstacaoDetalhe,
+  EstacaoRequest,
   EstacaoResumo,
   EstacoesParams,
+  EstacaoDaLinha,
+  LinhaAtualizacaoRequest,
   LinhaDetalhe,
+  LinhaRequest,
   LinhaResumo,
   LinhaStatus,
   LoginRequest,
@@ -12,9 +16,13 @@ import type {
   RegistroRequest,
   RegistroResponse,
   Rota,
+  RotaAgendada,
+  RotaAgendadaRequest,
   RotaParams,
   RotaSalvaRequest,
   RotaSalvaResponse,
+  StatusLinhaRequest,
+  Usuario,
   UsuarioAtual,
 } from '@/types/api';
 
@@ -60,6 +68,26 @@ export const authApi = {
 /** Endpoints que exigem token (o interceptor de client.ts envia o Authorization). */
 export const usuariosApi = {
   eu: () => api.get<UsuarioAtual>('/usuarios/me').then((r) => r.data),
+  /** Só administradores. */
+  listar: (pagina: number, tamanho = 20) =>
+    api.get<Pagina<Usuario>>('/usuarios', { params: { pagina, tamanho } }).then((r) => r.data),
+};
+
+/** Escrita na rede (linhas e estações): só administradores. */
+export const adminApi = {
+  criarLinha: (dados: LinhaRequest) => api.post<LinhaResumo>('/linhas', dados).then((r) => r.data),
+  atualizarLinha: (id: number, dados: LinhaAtualizacaoRequest) =>
+    api.put<LinhaResumo>(`/linhas/${id}`, dados).then((r) => r.data),
+  desativarLinha: (id: number) => api.delete(`/linhas/${id}`).then(() => undefined),
+  reordenarEstacoes: (id: number, idsEstacoes: number[]) =>
+    api.put<EstacaoDaLinha[]>(`/linhas/${id}/estacoes/ordem`, { idsEstacoes }).then((r) => r.data),
+  alterarStatus: (id: number, dados: StatusLinhaRequest) =>
+    api.patch<LinhaStatus>(`/linhas/${id}/status`, dados).then((r) => r.data),
+  criarEstacao: (dados: EstacaoRequest) =>
+    api.post<EstacaoResumo>('/estacoes', dados).then((r) => r.data),
+  atualizarEstacao: (id: number, dados: EstacaoRequest) =>
+    api.put<EstacaoResumo>(`/estacoes/${id}`, dados).then((r) => r.data),
+  desativarEstacao: (id: number) => api.delete(`/estacoes/${id}`).then(() => undefined),
 };
 
 export const rotasSalvasApi = {
@@ -70,4 +98,16 @@ export const rotasSalvasApi = {
   atualizar: (id: number, dados: RotaSalvaRequest) =>
     api.put<RotaSalvaResponse>(`/rotas/${id}`, dados).then((r) => r.data),
   excluir: (id: number) => api.delete<void>(`/rotas/${id}`).then(() => undefined),
+};
+
+/** Agendamentos das rotas salvas do usuário logado (o backend só devolve os da conta). */
+export const agendamentosApi = {
+  listar: () => api.get<RotaAgendada[]>('/rotas/agendamentos').then((r) => r.data),
+  listarDaRota: (idRota: number) =>
+    api.get<RotaAgendada[]>(`/rotas/${idRota}/agendamentos`).then((r) => r.data),
+  criar: (idRota: number, dados: RotaAgendadaRequest) =>
+    api.post<RotaAgendada>(`/rotas/${idRota}/agendamentos`, dados).then((r) => r.data),
+  atualizar: (id: number, dados: RotaAgendadaRequest) =>
+    api.put<RotaAgendada>(`/rotas/agendamentos/${id}`, dados).then((r) => r.data),
+  excluir: (id: number) => api.delete<void>(`/rotas/agendamentos/${id}`).then(() => undefined),
 };

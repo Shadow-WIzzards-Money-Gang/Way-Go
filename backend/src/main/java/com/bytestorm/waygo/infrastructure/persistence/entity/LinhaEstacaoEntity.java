@@ -37,4 +37,8 @@ public class LinhaEstacaoEntity {
 	@Column(name = "ATIVA", nullable = false)
 	private boolean ativa;
 
+	public void alterarSequencia(int sequencia) {
+		this.sequencia = sequencia;
+	}
+
 }

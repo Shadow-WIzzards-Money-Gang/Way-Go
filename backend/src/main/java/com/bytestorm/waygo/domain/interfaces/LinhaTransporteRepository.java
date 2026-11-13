@@ -16,4 +16,8 @@ public interface LinhaTransporteRepository {
 
 	boolean existePorId(Long id);
 
+	boolean existePorCodigo(String codigo);
+
+	LinhaTransporte salvar(LinhaTransporte linha);
+
 }

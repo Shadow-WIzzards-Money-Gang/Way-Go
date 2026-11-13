@@ -44,4 +44,14 @@ public class LinhaTransporteRepositoryAdapter implements LinhaTransporteReposito
 		return jpaRepository.existsById(id);
 	}
 
+	@Override
+	public boolean existePorCodigo(String codigo) {
+		return codigo != null && !codigo.isBlank() && jpaRepository.existsByCodigoIgnoreCase(codigo.trim());
+	}
+
+	@Override
+	public LinhaTransporte salvar(LinhaTransporte linha) {
+		return PersistenciaMapper.paraDominio(jpaRepository.save(PersistenciaMapper.paraEntity(linha)));
+	}
+
 }

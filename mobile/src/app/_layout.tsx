@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 
 import { definirAoNaoAutorizado } from '@/api/client';
 import { useAlertasRotas } from '@/hooks/useAlertasRotas';
+import { useLembretesAgendamentos } from '@/hooks/useLembretesAgendamentos';
 import { abrirLogin, descartarRotasAntigasDoAparelho, descartarSessaoExpirada } from '@/lib/conta';
 import { configurarFocoDoApp, queryClient } from '@/lib/queryClient';
 import { useSessao } from '@/store/sessao';
@@ -27,6 +28,7 @@ const tema = {
 
 function AlertasDeRotas() {
   useAlertasRotas();
+  useLembretesAgendamentos();
   return null;
 }
 
@@ -59,6 +61,10 @@ export default function RootLayout() {
           <Stack.Screen
             name="rota-salva"
             options={{ presentation: 'modal', headerShown: true, title: 'Rota salva' }}
+          />
+          <Stack.Screen
+            name="agendamento"
+            options={{ presentation: 'modal', headerShown: true, title: 'Agendamento' }}
           />
           <Stack.Screen name="login" options={{ presentation: 'modal' }} />
           <Stack.Screen name="cadastro" options={{ presentation: 'modal' }} />

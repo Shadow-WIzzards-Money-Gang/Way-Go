@@ -57,6 +57,10 @@ public class StatusLinhasCache {
 		log.debug("Cache de status carregado do banco: {} linhas", linhaIdPorCodigo.size());
 	}
 
+	public synchronized void invalidar() {
+		carregadoEm = null;
+	}
+
 	public Optional<Long> linhaIdPorCodigo(String codigo) {
 		return Optional.ofNullable(linhaIdPorCodigo.get(codigo));
 	}

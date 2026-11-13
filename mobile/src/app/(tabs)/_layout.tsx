@@ -1,5 +1,7 @@
 import { Tabs } from 'expo-router/js-tabs';
-import { Bookmark, Map, MapPin, TrainFront } from 'lucide-react-native';
+import { Bookmark, Map, MapPin, ShieldCheck, TrainFront } from 'lucide-react-native';
+
+import { useEhAdmin } from '@/hooks/queries';
 
 import { colors } from '@/theme/colors';
 
@@ -7,6 +9,9 @@ import { colors } from '@/theme/colors';
 export const unstable_settings = { initialRouteName: 'index' };
 
 export default function TabsLayout() {
+  // A aba Admin só existe para administradores (confirmado por /usuarios/me).
+  const ehAdmin = useEhAdmin();
+
   return (
     <Tabs
       screenOptions={{
@@ -43,6 +48,14 @@ export default function TabsLayout() {
         options={{
           title: 'Rotas',
           tabBarIcon: ({ color, size }) => <Bookmark color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="admin"
+        options={{
+          title: 'Admin',
+          href: ehAdmin ? undefined : null,
+          tabBarIcon: ({ color, size }) => <ShieldCheck color={color} size={size} />,
         }}
       />
     </Tabs>

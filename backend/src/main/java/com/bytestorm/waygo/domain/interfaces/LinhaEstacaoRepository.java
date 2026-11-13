@@ -15,4 +15,6 @@ public interface LinhaEstacaoRepository {
 
 	List<LinhaEstacao> buscarPorIds(Collection<Long> ids);
 
+	void salvarSequencias(List<LinhaEstacao> linhaEstacoes);
+
 }

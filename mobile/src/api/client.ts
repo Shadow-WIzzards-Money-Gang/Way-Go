@@ -56,7 +56,10 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => {
-    log.info('api', `← ${response.status} ${descrever(response.config)}${duracao(response.config)}`);
+    log.info(
+      'api',
+      `← ${response.status} ${descrever(response.config)}${duracao(response.config)}`,
+    );
     return response;
   },
   (erro: unknown) => {

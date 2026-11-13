@@ -35,6 +35,19 @@ public final class PersistenciaMapper {
 				entity.getOperadora(), entity.getTipoTransporte(), entity.isAtiva());
 	}
 
+	public static LinhaTransporteEntity paraEntity(LinhaTransporte linha) {
+		return new LinhaTransporteEntity(linha.getId(), linha.getNome(), linha.getCodigo(), linha.getCor(),
+				linha.getOperadora(), linha.getTipoTransporte(), linha.isAtiva());
+	}
+
+	public static EstacaoEntity paraEntity(Estacao estacao) {
+		Coordenada coordenada = estacao.getCoordenada();
+		return new EstacaoEntity(estacao.getId(), estacao.getNome(),
+				coordenada == null ? null : coordenada.latitude(),
+				coordenada == null ? null : coordenada.longitude(),
+				estacao.isAtiva());
+	}
+
 	public static Estacao paraDominio(EstacaoEntity entity) {
 		Coordenada coordenada = entity.getLatitude() != null && entity.getLongitude() != null
 				? new Coordenada(entity.getLatitude(), entity.getLongitude())

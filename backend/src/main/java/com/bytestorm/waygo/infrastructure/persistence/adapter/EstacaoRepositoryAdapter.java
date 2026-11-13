@@ -62,4 +62,9 @@ public class EstacaoRepositoryAdapter implements EstacaoRepository {
 		return jpaRepository.existsById(id);
 	}
 
+	@Override
+	public Estacao salvar(Estacao estacao) {
+		return PersistenciaMapper.paraDominio(jpaRepository.save(PersistenciaMapper.paraEntity(estacao)));
+	}
+
 }

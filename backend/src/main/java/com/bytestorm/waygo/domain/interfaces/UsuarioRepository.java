@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.bytestorm.waygo.domain.entity.Usuario;
+import com.bytestorm.waygo.domain.valueobject.Pagina;
 
 public interface UsuarioRepository {
 
@@ -14,5 +15,7 @@ public interface UsuarioRepository {
 	Optional<Usuario> buscarPorEmail(String email);
 
 	boolean existePorEmail(String email);
+
+	Pagina<Usuario> listarPaginado(int pagina, int tamanho);
 
 }

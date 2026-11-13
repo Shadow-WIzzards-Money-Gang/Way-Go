@@ -47,4 +47,15 @@ public class LinhaTransporteEntity {
 	@Column(name = "ATIVA", nullable = false)
 	private boolean ativa;
 
+	public LinhaTransporteEntity(Long id, String nome, String codigo, String cor, String operadora,
+			TipoTransporte tipoTransporte, boolean ativa) {
+		this.id = id;
+		this.nome = nome;
+		this.codigo = codigo;
+		this.cor = cor;
+		this.operadora = operadora;
+		this.tipoTransporte = tipoTransporte;
+		this.ativa = ativa;
+	}
+
 }

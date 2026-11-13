@@ -2,17 +2,20 @@ import { useQueries } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
 import { rotasApi } from '@/api/waygo';
-import { type Agendamento, dadosLocaisDa, useRotasLocais } from '@/store/rotasLocais';
-import type { LinhaDaEstacao, RotaParams, RotaSalvaResponse } from '@/types/api';
+import { dadosLocaisDa, useRotasLocais } from '@/store/rotasLocais';
+import type { LinhaDaEstacao, RotaAgendada, RotaParams, RotaSalvaResponse } from '@/types/api';
 import { linhasDaRota } from '@/utils/rota';
 
-import { queryKeys, useRotasSalvas } from './queries';
+import { queryKeys, useAgendamentos, useRotasSalvas } from './queries';
 
-/** Rota salva da conta (API) + o que só o aparelho guarda (linhas e lembrete). */
+/** Rota salva da conta (API) + seus agendamentos (API) + as linhas guardadas no aparelho. */
 export interface RotaDoUsuario extends RotaSalvaResponse {
   linhas: LinhaDaEstacao[];
-  agendamento: Agendamento | null;
+  /** Ordenados por horário de partida. */
+  agendamentos: RotaAgendada[];
 }
+
+const SEM_AGENDAMENTOS: RotaAgendada[] = [];
 
 const paramsDa = (rota: RotaSalvaResponse): RotaParams => ({
   origem: rota.origem.nome,
@@ -41,7 +44,10 @@ export function useRotasDoUsuario() {
     })),
   });
 
-  const calculadas = calculos.map((c, i) => ({ rotaId: semLinhas[i]?.id, linhas: linhasDaRota(c.data) }));
+  const calculadas = calculos.map((c, i) => ({
+    rotaId: semLinhas[i]?.id,
+    linhas: linhasDaRota(c.data),
+  }));
 
   useEffect(() => {
     for (const { rotaId, linhas } of calculadas) {
@@ -49,7 +55,27 @@ export function useRotasDoUsuario() {
     }
   }, [calculadas, definir]);
 
-  const rotas: RotaDoUsuario[] = salvas.map((rota) => ({ ...rota, ...dadosLocaisDa(porRota, rota.id) }));
+  const agendamentosQuery = useAgendamentos();
+  const agendamentosPorRota = new Map<number, RotaAgendada[]>();
+  for (const a of agendamentosQuery.data ?? []) {
+    agendamentosPorRota.set(a.idRotaSalva, [...(agendamentosPorRota.get(a.idRotaSalva) ?? []), a]);
+  }
 
-  return { ...query, rotas };
+  const rotas: RotaDoUsuario[] = salvas.map((rota) => ({
+    ...rota,
+    ...dadosLocaisDa(porRota, rota.id),
+    agendamentos: (agendamentosPorRota.get(rota.id) ?? SEM_AGENDAMENTOS).sort(
+      (a, b) => a.horarioPartidaMinutos - b.horarioPartidaMinutos,
+    ),
+  }));
+
+  return {
+    ...query,
+    rotas,
+    agendamentosCarregando: agendamentosQuery.isPending,
+    refetch: async () => {
+      void agendamentosQuery.refetch();
+      return query.refetch();
+    },
+  };
 }

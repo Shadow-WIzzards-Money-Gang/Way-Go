@@ -1,6 +1,8 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
+  adminApi,
+  agendamentosApi,
   authApi,
   estacoesApi,
   linhasApi,
@@ -14,18 +16,26 @@ import { cancelarTodosOsLembretes } from '@/services/notifications';
 import { useRotasLocais } from '@/store/rotasLocais';
 import { useLogado, useSessao } from '@/store/sessao';
 import type {
+  EstacaoRequest,
   EstacoesParams,
+  LinhaAtualizacaoRequest,
+  LinhaRequest,
   LoginRequest,
   RegistroRequest,
+  RotaAgendada,
+  RotaAgendadaRequest,
   RotaParams,
   RotaSalvaRequest,
   RotaSalvaResponse,
+  StatusLinhaRequest,
 } from '@/types/api';
 
 /** Chaves centralizadas: invalidar/prefetch sempre por aqui. */
 export const queryKeys = {
   rede: ['rede'] as const,
   linhas: ['linhas'] as const,
+  /** /linhas: inclui as inativas (a /rede só traz as que estão no grafo). */
+  todasAsLinhas: ['linhas', 'todas'] as const,
   linha: (id: number) => ['linhas', id] as const,
   linhaStatus: (id: number) => ['linhas', id, 'status'] as const,
   estacoes: (params: EstacoesParams) => ['estacoes', 'pagina', params] as const,
@@ -35,6 +45,8 @@ export const queryKeys = {
   conta: ['conta'] as const,
   usuarioAtual: ['conta', 'eu'] as const,
   rotasSalvas: ['conta', 'rotas-salvas'] as const,
+  agendamentos: ['conta', 'agendamentos'] as const,
+  usuarios: (pagina: number) => ['conta', 'usuarios', pagina] as const,
 };
 
 /** Rede completa (estações, linhas com status). Atualiza sozinha no intervalo do .env. */
@@ -190,7 +202,174 @@ export function useExcluirRota() {
       queryClient.setQueryData<RotaSalvaResponse[]>(queryKeys.rotasSalvas, (atuais) =>
         atuais?.filter((r) => r.id !== id),
       );
+      // O banco apaga os agendamentos da rota em cascata.
+      queryClient.setQueryData<RotaAgendada[]>(queryKeys.agendamentos, (atuais) =>
+        atuais?.filter((a) => a.idRotaSalva !== id),
+      );
       void queryClient.invalidateQueries({ queryKey: queryKeys.rotasSalvas });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.agendamentos });
     },
+  });
+}
+
+// --- Agendamentos das rotas salvas (exigem login; o backend só devolve os da conta) ---
+
+export function useAgendamentos() {
+  const logado = useLogado();
+  return useQuery({
+    queryKey: queryKeys.agendamentos,
+    queryFn: agendamentosApi.listar,
+    enabled: logado,
+  });
+}
+
+/** Aplica o agendamento devolvido pela API no cache, sem esperar o refetch. */
+function substituirNoCache(atuais: RotaAgendada[] | undefined, novo: RotaAgendada) {
+  if (!atuais) return atuais;
+  const existe = atuais.some((a) => a.id === novo.id);
+  const lista = existe ? atuais.map((a) => (a.id === novo.id ? novo : a)) : [...atuais, novo];
+  return lista.sort((a, b) => a.horarioPartidaMinutos - b.horarioPartidaMinutos);
+}
+
+export function useCriarAgendamento() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ idRota, dados }: { idRota: number; dados: RotaAgendadaRequest }) =>
+      agendamentosApi.criar(idRota, dados),
+    onSuccess: (novo) => {
+      queryClient.setQueryData<RotaAgendada[]>(queryKeys.agendamentos, (atuais) =>
+        substituirNoCache(atuais, novo),
+      );
+      void queryClient.invalidateQueries({ queryKey: queryKeys.agendamentos });
+    },
+  });
+}
+
+export function useAtualizarAgendamento() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, dados }: { id: number; dados: RotaAgendadaRequest }) =>
+      agendamentosApi.atualizar(id, dados),
+    onSuccess: (atualizado) => {
+      queryClient.setQueryData<RotaAgendada[]>(queryKeys.agendamentos, (atuais) =>
+        substituirNoCache(atuais, atualizado),
+      );
+      void queryClient.invalidateQueries({ queryKey: queryKeys.agendamentos });
+    },
+  });
+}
+
+export function useExcluirAgendamento() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: agendamentosApi.excluir,
+    onSuccess: (_, id) => {
+      queryClient.setQueryData<RotaAgendada[]>(queryKeys.agendamentos, (atuais) =>
+        atuais?.filter((a) => a.id !== id),
+      );
+      void queryClient.invalidateQueries({ queryKey: queryKeys.agendamentos });
+    },
+  });
+}
+
+// --- Administração ---
+
+/** true só quando /usuarios/me confirma a role ADMINISTRADOR (o backend valida de novo). */
+export function useEhAdmin(): boolean {
+  const { data } = useUsuarioAtual();
+  return data?.roles.includes('ADMINISTRADOR') ?? false;
+}
+
+export function useUsuarios(pagina: number) {
+  const ehAdmin = useEhAdmin();
+  return useQuery({
+    queryKey: queryKeys.usuarios(pagina),
+    queryFn: () => usuariosApi.listar(pagina),
+    enabled: ehAdmin,
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** Todas as linhas, inclusive as desativadas. */
+export function useTodasAsLinhas() {
+  return useQuery({ queryKey: queryKeys.todasAsLinhas, queryFn: linhasApi.listar });
+}
+
+/** Qualquer mudança na rede afeta listas, detalhes, o mapa e as rotas já calculadas. */
+function useInvalidarRede() {
+  const queryClient = useQueryClient();
+  return () =>
+    Promise.all(
+      [queryKeys.linhas, ['estacoes'], queryKeys.rede, ['rotas']].map((queryKey) =>
+        queryClient.invalidateQueries({ queryKey }),
+      ),
+    );
+}
+
+export function useCriarLinha() {
+  const invalidar = useInvalidarRede();
+  return useMutation({
+    mutationFn: (dados: LinhaRequest) => adminApi.criarLinha(dados),
+    onSuccess: invalidar,
+  });
+}
+
+export function useAtualizarLinha() {
+  const invalidar = useInvalidarRede();
+  return useMutation({
+    mutationFn: ({ id, dados }: { id: number; dados: LinhaAtualizacaoRequest }) =>
+      adminApi.atualizarLinha(id, dados),
+    onSuccess: invalidar,
+  });
+}
+
+export function useDesativarLinha() {
+  const invalidar = useInvalidarRede();
+  return useMutation({
+    mutationFn: (id: number) => adminApi.desativarLinha(id),
+    onSuccess: invalidar,
+  });
+}
+
+export function useReordenarEstacoes() {
+  const invalidar = useInvalidarRede();
+  return useMutation({
+    mutationFn: ({ id, idsEstacoes }: { id: number; idsEstacoes: number[] }) =>
+      adminApi.reordenarEstacoes(id, idsEstacoes),
+    onSuccess: invalidar,
+  });
+}
+
+export function useAlterarStatusLinha() {
+  const invalidar = useInvalidarRede();
+  return useMutation({
+    mutationFn: ({ id, dados }: { id: number; dados: StatusLinhaRequest }) =>
+      adminApi.alterarStatus(id, dados),
+    onSuccess: invalidar,
+  });
+}
+
+export function useCriarEstacao() {
+  const invalidar = useInvalidarRede();
+  return useMutation({
+    mutationFn: (dados: EstacaoRequest) => adminApi.criarEstacao(dados),
+    onSuccess: invalidar,
+  });
+}
+
+export function useAtualizarEstacao() {
+  const invalidar = useInvalidarRede();
+  return useMutation({
+    mutationFn: ({ id, dados }: { id: number; dados: EstacaoRequest }) =>
+      adminApi.atualizarEstacao(id, dados),
+    onSuccess: invalidar,
+  });
+}
+
+export function useDesativarEstacao() {
+  const invalidar = useInvalidarRede();
+  return useMutation({
+    mutationFn: (id: number) => adminApi.desativarEstacao(id),
+    onSuccess: invalidar,
   });
 }

@@ -6,4 +6,6 @@ import com.bytestorm.waygo.infrastructure.persistence.entity.LinhaTransporteEnti
 
 public interface LinhaTransporteJpaRepository extends JpaRepository<LinhaTransporteEntity, Long> {
 
+	boolean existsByCodigoIgnoreCase(String codigo);
+
 }

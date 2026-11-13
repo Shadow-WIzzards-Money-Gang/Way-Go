@@ -112,6 +112,11 @@ class RotaSalvaServiceTest {
 		public boolean existePorId(Long id) {
 			return estacoes.containsKey(id);
 		}
+
+		@Override
+		public Estacao salvar(Estacao estacao) {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	private RotaSalvaResponse salvarDaAna(String nome, Long origem, Long destino) {

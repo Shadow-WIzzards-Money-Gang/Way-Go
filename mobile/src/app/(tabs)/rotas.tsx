@@ -15,7 +15,7 @@ import { EmptyState, ErrorState } from '@/components/ui/States';
 import { useExcluirRota, useRede } from '@/hooks/queries';
 import { type RedeIndex, useRedeIndex } from '@/hooks/useRedeIndex';
 import { type RotaDoUsuario, useRotasDoUsuario } from '@/hooks/useRotasDoUsuario';
-import { cancelarLembretes, pedirPermissaoNotificacoes } from '@/services/notifications';
+import { pedirPermissaoNotificacoes } from '@/services/notifications';
 import { usePlanejamento } from '@/store/planejamento';
 import { useRotasLocais } from '@/store/rotasLocais';
 import { useLogado, useSessao } from '@/store/sessao';
@@ -75,7 +75,7 @@ export default function RotasScreen() {
   );
   const agendar = useCallback(
     (rota: RotaDoUsuario) =>
-      router.push({ pathname: '/rota-salva', params: { id: String(rota.id), agendar: '1' } }),
+      router.push({ pathname: '/agendamento', params: { idRota: String(rota.id) } }),
     [],
   );
 
@@ -90,10 +90,8 @@ export default function RotasScreen() {
           onPress: () => {
             setExcluindoId(rota.id);
             excluirNaApi(rota.id, {
-              onSuccess: () => {
-                removerLocal(rota.id);
-                void cancelarLembretes(rota.id).catch(() => undefined);
-              },
+              // Os agendamentos somem no backend (cascade) e os lembretes são ressincronizados.
+              onSuccess: () => removerLocal(rota.id),
               onError: (erro) => {
                 // 401 já abre o login; os demais erros merecem um aviso.
                 if (erro instanceof ApiError && erro.tipo === 'nao-autorizado') return;

@@ -4,22 +4,13 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 import type { LinhaDaEstacao } from '@/types/api';
 
-export interface Agendamento {
-  /** 0 = domingo ... 6 = sábado. */
-  dias: number[];
-  /** "HH:mm" */
-  horario: string;
-}
-
 /** O que o backend ainda não guarda sobre uma rota salva. */
 export interface DadosLocaisRota {
   /** Linhas usadas pela rota, para mostrar badges e cruzar com o status de /rede. */
   linhas: LinhaDaEstacao[];
-  /** Lembrete local (o backend ainda não tem endpoint de rota agendada). */
-  agendamento: Agendamento | null;
 }
 
-const VAZIO: DadosLocaisRota = { linhas: [], agendamento: null };
+const VAZIO: DadosLocaisRota = { linhas: [] };
 
 interface RotasLocaisState {
   /** E-mail da conta a que estes dados pertencem. */
@@ -36,7 +27,7 @@ interface RotasLocaisState {
 
 /**
  * Complementa as rotas salvas da conta (que vêm da API) com dados que só existem no aparelho.
- * Quando o backend expuser rotas agendadas, o agendamento sai daqui.
+ * Os agendamentos vêm do backend (/rotas/agendamentos); aqui ficam só as linhas de cada rota.
  */
 export const useRotasLocais = create<RotasLocaisState>()(
   persist(
@@ -62,8 +53,17 @@ export const useRotasLocais = create<RotasLocaisState>()(
     }),
     {
       name: 'waygo:rotas-locais',
-      version: 1,
+      // v2: o agendamento saiu do aparelho e passou a vir do backend.
+      version: 2,
       storage: createJSONStorage(() => AsyncStorage),
+      migrate: (salvo) => {
+        const estado = (salvo ?? {}) as Partial<RotasLocaisState>;
+        const porRota: Record<string, DadosLocaisRota> = {};
+        for (const [id, dados] of Object.entries(estado.porRota ?? {})) {
+          porRota[id] = { linhas: dados?.linhas ?? [] };
+        }
+        return { ...estado, porRota } as RotasLocaisState;
+      },
     },
   ),
 );

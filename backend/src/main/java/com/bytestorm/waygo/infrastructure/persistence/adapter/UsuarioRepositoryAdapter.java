@@ -6,13 +6,18 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bytestorm.waygo.domain.entity.Usuario;
 import com.bytestorm.waygo.domain.enums.Role;
 import com.bytestorm.waygo.domain.interfaces.UsuarioRepository;
+import com.bytestorm.waygo.domain.valueobject.Pagina;
 import com.bytestorm.waygo.infrastructure.persistence.entity.RoleEntity;
+import com.bytestorm.waygo.infrastructure.persistence.entity.UsuarioEntity;
 import com.bytestorm.waygo.infrastructure.persistence.jpa.RoleJpaRepository;
 import com.bytestorm.waygo.infrastructure.persistence.jpa.UsuarioJpaRepository;
 import com.bytestorm.waygo.infrastructure.persistence.mapper.PersistenciaMapper;
@@ -49,6 +54,17 @@ public class UsuarioRepositoryAdapter implements UsuarioRepository {
 	@Override
 	public boolean existePorEmail(String email) {
 		return email != null && !email.isBlank() && jpaRepository.existsByEmailNormalizado(normalizar(email));
+	}
+
+	@Override
+	public Pagina<Usuario> listarPaginado(int pagina, int tamanho) {
+		Page<UsuarioEntity> resultado = jpaRepository.findAll(
+				PageRequest.of(pagina, tamanho, Sort.by(Sort.Direction.DESC, "criadoEm").and(Sort.by("id"))));
+		return new Pagina<>(
+				resultado.map(PersistenciaMapper::paraDominio).getContent(),
+				resultado.getNumber(),
+				resultado.getSize(),
+				resultado.getTotalElements());
 	}
 
 	private Set<RoleEntity> buscarRoles(Set<Role> roles) {

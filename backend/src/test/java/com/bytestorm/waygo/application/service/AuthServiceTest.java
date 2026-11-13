@@ -30,6 +30,7 @@ import com.bytestorm.waygo.domain.exception.CredenciaisInvalidasException;
 import com.bytestorm.waygo.domain.exception.EmailJaCadastradoException;
 import com.bytestorm.waygo.domain.exception.RequisicaoInvalidaException;
 import com.bytestorm.waygo.domain.interfaces.UsuarioRepository;
+import com.bytestorm.waygo.domain.valueobject.Pagina;
 import com.bytestorm.waygo.infrastructure.config.security.BCryptSenhaHasher;
 import com.bytestorm.waygo.infrastructure.config.security.TokenService;
 import com.bytestorm.waygo.infrastructure.config.security.UsuarioDetailsService;
@@ -74,6 +75,11 @@ class AuthServiceTest {
 		@Override
 		public boolean existePorEmail(String email) {
 			return buscarPorEmail(email).isPresent();
+		}
+
+		@Override
+		public Pagina<Usuario> listarPaginado(int pagina, int tamanho) {
+			throw new UnsupportedOperationException();
 		}
 	}
 

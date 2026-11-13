@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import com.bytestorm.waygo.application.dto.response.ErroResponse;
+import com.bytestorm.waygo.domain.exception.ConflitoException;
 import com.bytestorm.waygo.domain.exception.CredenciaisInvalidasException;
 import com.bytestorm.waygo.domain.exception.EmailJaCadastradoException;
 import com.bytestorm.waygo.domain.exception.RecursoNaoEncontradoException;
@@ -48,6 +50,16 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(EmailJaCadastradoException.class)
 	public ResponseEntity<ErroResponse> tratarEmailJaCadastrado(EmailJaCadastradoException ex) {
 		return erro(HttpStatus.CONFLICT, ex.getMessage());
+	}
+
+	@ExceptionHandler(ConflitoException.class)
+	public ResponseEntity<ErroResponse> tratarConflito(ConflitoException ex) {
+		return erro(HttpStatus.CONFLICT, ex.getMessage());
+	}
+
+	@ExceptionHandler(AccessDeniedException.class)
+	public ResponseEntity<ErroResponse> tratarAcessoNegado(AccessDeniedException ex) {
+		return erro(HttpStatus.FORBIDDEN, "Acesso restrito a administradores");
 	}
 
 	@ExceptionHandler(RequisicaoInvalidaException.class)

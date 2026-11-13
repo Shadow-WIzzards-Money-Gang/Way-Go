@@ -124,8 +124,8 @@ Fluxo de dados: **tela → hook (`src/hooks/queries.ts`) → função da API (`s
 
 ## Pendências conhecidas (TODO)
 
-- **Agendamento das rotas é só local** (`src/store/rotasLocais.ts`, lembrete no aparelho vinculado ao id da rota no servidor). As linhas de cada rota também ficam ali, porque o `RotaSalvaResponse` não as traz. Quando o backend expuser rotas agendadas, troque por queries/mutations.
-- **`GET /usuarios/me` foi assumido** com o formato do `RegistroResponse` (`id`, `email`, `roles`, `criadoEm`). Se o endpoint não responder, a tela "Minha conta" mostra só o e-mail da sessão.
+- **Agendamentos vêm do backend** (`/rotas/agendamentos`, vários por rota; `useAgendamentos` e mutations em `src/hooks/queries.ts`). Os lembretes continuam sendo notificações locais, recriadas a partir dos dados da conta por `useLembretesAgendamentos` (montado no layout raiz). Só as linhas de cada rota ficam no aparelho (`src/store/rotasLocais.ts`), porque o `RotaSalvaResponse` não as traz.
+- **Área de administração** (`src/app/(tabs)/admin/`): a aba só aparece quando `GET /usuarios/me` traz a role `ADMINISTRADOR` (`useEhAdmin`), e o layout redireciona quem não é admin. O backend valida de novo com `@PreAuthorize` (403). Não há tela para promover contas: o primeiro admin é criado direto no banco (`USUARIO_ROLE`).
 - **"Relatar" na tela da linha** mostra um aviso "em breve": falta endpoint no backend.
 - **Alertas de mudança de status** só disparam com o app aberto (comparação a cada atualização de `/rede`). Para receber em segundo plano, é preciso push no backend.
 - O mapa não roda na web (`MapaRede.web.tsx` mostra um aviso no lugar).
