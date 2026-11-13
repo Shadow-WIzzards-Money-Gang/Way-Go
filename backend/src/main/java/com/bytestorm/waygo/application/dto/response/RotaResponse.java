@@ -8,6 +8,7 @@ public record RotaResponse(
 		EstacaoResumoResponse origem,
 		EstacaoResumoResponse destino,
 		CriterioRota criterio,
+		boolean alternativa,
 		int tempoEstimadoSegundos,
 		int tempoEstimadoMinutos,
 		int distanciaMetros,

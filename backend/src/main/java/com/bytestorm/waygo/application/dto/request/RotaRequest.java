@@ -14,5 +14,9 @@ public record RotaRequest(
 
 		@Schema(description = "Critério de cálculo; se omitido, usa o padrão configurado",
 				allowableValues = { "MENOR_TEMPO", "MENOS_BALDEACOES", "EQUILIBRADO" })
-		String criterio) {
+		String criterio,
+
+		@Schema(description = "true calcula uma rota alternativa que usa só linhas com status "
+				+ "\"Operação Normal\" (status desconhecido conta como normal)", defaultValue = "false")
+		Boolean alternativa) {
 }

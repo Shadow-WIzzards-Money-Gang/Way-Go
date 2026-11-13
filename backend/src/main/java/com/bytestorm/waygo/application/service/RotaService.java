@@ -66,12 +66,16 @@ public class RotaService {
 			throw new RequisicaoInvalidaException("A estação de origem e a de destino devem ser diferentes");
 		}
 
+		boolean alternativa = Boolean.TRUE.equals(request.alternativa());
 		ParametrosRota parametros = new ParametrosRota(criterio, fatorLentidao,
-				(int) penalidadeBaldeacao.toSeconds(), statusCache.statusAtuais());
+				(int) penalidadeBaldeacao.toSeconds(), statusCache.statusAtuais(), alternativa);
 
 		CaminhoRota caminho = calculadora.calcular(grafo, origem.getId(), destino.getId(), parametros)
-				.orElseThrow(() -> new RotaNaoEncontradaException("Não há rota disponível entre " + origem.getNome()
-						+ " e " + destino.getNome() + " com o status atual das linhas"));
+				.orElseThrow(() -> new RotaNaoEncontradaException(alternativa
+						? "Não há rota entre " + origem.getNome() + " e " + destino.getNome()
+								+ " que evite linhas com problemas no momento"
+						: "Não há rota disponível entre " + origem.getNome() + " e " + destino.getNome()
+								+ " com o status atual das linhas"));
 		return montarResposta(grafo, parametros, origem, destino, caminho);
 	}
 
@@ -162,6 +166,7 @@ public class RotaService {
 				EstacaoResumoResponse.de(origem),
 				EstacaoResumoResponse.de(destino),
 				parametros.criterio(),
+				parametros.somenteLinhasNormais(),
 				tempoTotal,
 				(int) Math.ceil(tempoTotal / 60.0),
 				distanciaTotal,

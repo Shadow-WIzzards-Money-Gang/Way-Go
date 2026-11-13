@@ -34,6 +34,10 @@ public enum StatusOperacional {
 		return this == PARALISADA || this == OPERACAO_ENCERRADA;
 	}
 
+	public boolean operacaoNormal() {
+		return this == NORMAL || this == DESCONHECIDO;
+	}
+
 	public boolean afetaTempo() {
 		return this == VELOCIDADE_REDUZIDA || this == OPERACAO_PARCIAL;
 	}

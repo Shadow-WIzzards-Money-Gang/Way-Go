@@ -11,7 +11,13 @@ public record ParametrosRota(
 		CriterioRota criterio,
 		double fatorLentidao,
 		int penalidadeBaldeacaoSegundos,
-		Map<Long, StatusOperacional> statusPorLinha) {
+		Map<Long, StatusOperacional> statusPorLinha,
+		boolean somenteLinhasNormais) {
+
+	public ParametrosRota(CriterioRota criterio, double fatorLentidao, int penalidadeBaldeacaoSegundos,
+			Map<Long, StatusOperacional> statusPorLinha) {
+		this(criterio, fatorLentidao, penalidadeBaldeacaoSegundos, statusPorLinha, false);
+	}
 
 	public ParametrosRota {
 		Objects.requireNonNull(criterio, "criterio é obrigatório");
@@ -29,7 +35,8 @@ public record ParametrosRota(
 	}
 
 	public boolean linhaDisponivel(Long linhaId) {
-		return !statusDa(linhaId).bloqueiaCirculacao();
+		StatusOperacional status = statusDa(linhaId);
+		return somenteLinhasNormais ? status.operacaoNormal() : !status.bloqueiaCirculacao();
 	}
 
 	/** Tempo que o passageiro deve levar na aresta, já ajustado pelo status da linha. */
