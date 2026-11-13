@@ -30,6 +30,11 @@ interface RotaSugeridaPanelProps {
   erro: unknown;
   criterio: CriterioRota;
   aoMudarCriterio: (c: CriterioRota) => void;
+  /** A rota sugerida passa por linha com problema: oferece a alternativa. */
+  mostrarOpcaoAlternativa: boolean;
+  /** Exibindo a rota calculada com ?alternativa=true. */
+  alternativaAtiva: boolean;
+  aoAlternar: (alternativa: boolean) => void;
   aoTentarNovamente: () => void;
   aoAgendar: () => void;
   aoSalvar: () => void;
@@ -69,7 +74,7 @@ function ConteudoRota({ rota }: { rota: Rota }) {
         <View className="flex-row items-end justify-between">
           <View>
             <Text className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
-              Rota sugerida
+              {rota.alternativa ? 'Rota alternativa' : 'Rota sugerida'}
             </Text>
             <Text
               className="text-3xl font-bold text-ink"
@@ -118,6 +123,9 @@ export function RotaSugeridaPanel({
   erro,
   criterio,
   aoMudarCriterio,
+  mostrarOpcaoAlternativa,
+  alternativaAtiva,
+  aoAlternar,
   aoTentarNovamente,
   aoAgendar,
   aoSalvar,
@@ -132,6 +140,15 @@ export function RotaSugeridaPanel({
         icone={Route}
         titulo="Para onde vamos?"
         mensagem="Escolha a estação de origem e a de destino para ver a melhor rota."
+      />
+    );
+  } else if (alternativaAtiva && erro instanceof ApiError && erro.tipo === 'sem-rota') {
+    conteudo = (
+      <EmptyState
+        icone={SearchX}
+        titulo="Nenhuma alternativa disponível"
+        mensagem={erro.message}
+        acao={{ rotulo: 'Ver rota sugerida', onPress: () => aoAlternar(false) }}
       />
     );
   } else if (erro instanceof ApiError && erro.tipo === 'sem-rota') {
@@ -194,6 +211,20 @@ export function RotaSugeridaPanel({
                 />
               ))}
             </ScrollView>
+          )}
+          {temSelecao && mostrarOpcaoAlternativa && (
+            <View className="flex-row flex-wrap gap-2 pb-3">
+              <Chip
+                rotulo="Rota sugerida"
+                selecionado={!alternativaAtiva}
+                onPress={() => aoAlternar(false)}
+              />
+              <Chip
+                rotulo="Evitar linhas com problema"
+                selecionado={alternativaAtiva}
+                onPress={() => aoAlternar(true)}
+              />
+            </View>
           )}
           <ScrollView style={{ maxHeight: height * 0.42 }} showsVerticalScrollIndicator={false}>
             <View className={carregando && rota ? 'opacity-60' : ''}>{conteudo}</View>

@@ -1,6 +1,9 @@
 import { describe, expect, it } from '@jest/globals';
+
+import type { Rota, StatusOperacional } from '@/types/api';
+
 import { corDeTextoSobre, corSegura } from '../color';
-import { infoStatus, statusDaRota } from '../status';
+import { infoStatus, rotaTemLinhaComProblema, statusDaRota } from '../status';
 import { contemTexto, formatarNomeLinha, normalizar } from '../text';
 
 describe('statusDaRota', () => {
@@ -13,6 +16,24 @@ describe('statusDaRota', () => {
   it('sem informação quando não há status conhecido', () => {
     expect(statusDaRota([]).rotulo).toBe('Sem informação');
     expect(statusDaRota(['DESCONHECIDO']).rotulo).toBe('Sem informação');
+  });
+});
+
+describe('rotaTemLinhaComProblema', () => {
+  const rota = (...status: StatusOperacional[]) =>
+    ({ trechos: status.map((statusLinha) => ({ statusLinha })) }) as unknown as Pick<
+      Rota,
+      'trechos'
+    >;
+
+  it('detecta trecho fora da operação normal', () => {
+    expect(rotaTemLinhaComProblema(rota('NORMAL', 'ATIVIDADE_PROGRAMADA'))).toBe(true);
+    expect(rotaTemLinhaComProblema(rota('PARALISADA'))).toBe(true);
+  });
+
+  it('normal e desconhecido não contam como problema', () => {
+    expect(rotaTemLinhaComProblema(rota('NORMAL', 'DESCONHECIDO'))).toBe(false);
+    expect(rotaTemLinhaComProblema(rota())).toBe(false);
   });
 });
 

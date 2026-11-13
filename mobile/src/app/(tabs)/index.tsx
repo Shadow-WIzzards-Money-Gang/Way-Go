@@ -12,6 +12,7 @@ import { useRedeIndex } from '@/hooks/useRedeIndex';
 import { abrirLogin, hrefComParams } from '@/lib/conta';
 import { type CampoEstacao, usePlanejamento } from '@/store/planejamento';
 import { useLogado } from '@/store/sessao';
+import { rotaTemLinhaComProblema } from '@/utils/status';
 
 const ALTURA_CARD_ROTA = 120;
 
@@ -29,7 +30,21 @@ export default function MapaScreen() {
     [origem, destino, criterio],
   );
   const rotaQuery = useRota(params);
-  const rota = params ? rotaQuery.data : undefined;
+  const rotaSugerida = params ? rotaQuery.data : undefined;
+  const sugeridaTemProblema = rotaSugerida ? rotaTemLinhaComProblema(rotaSugerida) : false;
+
+  // A escolha "evitar linhas com problema" vale só para o trajeto/critério em que foi feita.
+  const chaveTrajeto = params ? `${params.origem}|${params.destino}|${params.criterio}` : '';
+  const [escolhaAlternativa, setEscolhaAlternativa] = useState({ chave: '', ativa: false });
+  const alternativaAtiva =
+    sugeridaTemProblema && escolhaAlternativa.chave === chaveTrajeto && escolhaAlternativa.ativa;
+  const alternarRota = (ativa: boolean) => setEscolhaAlternativa({ chave: chaveTrajeto, ativa });
+
+  const alternativaQuery = useRota(
+    alternativaAtiva && params ? { ...params, alternativa: true } : null,
+  );
+  const rotaQueryAtual = alternativaAtiva ? alternativaQuery : rotaQuery;
+  const rota = alternativaAtiva ? alternativaQuery.data : rotaSugerida;
 
   const escolher = (campo: CampoEstacao) =>
     router.push({ pathname: '/selecionar-estacao', params: { campo } });
@@ -81,11 +96,14 @@ export default function MapaScreen() {
         <RotaSugeridaPanel
           temSelecao={params !== null}
           rota={rota}
-          carregando={rotaQuery.isFetching}
-          erro={params ? rotaQuery.error : null}
+          carregando={rotaQueryAtual.isFetching}
+          erro={params ? rotaQueryAtual.error : null}
           criterio={criterio}
           aoMudarCriterio={definirCriterio}
-          aoTentarNovamente={() => void rotaQuery.refetch()}
+          mostrarOpcaoAlternativa={sugeridaTemProblema}
+          alternativaAtiva={alternativaAtiva}
+          aoAlternar={alternarRota}
+          aoTentarNovamente={() => void rotaQueryAtual.refetch()}
           aoAgendar={() => abrirRotaSalva(true)}
           aoSalvar={() => abrirRotaSalva(false)}
         />

@@ -159,6 +159,8 @@ export interface Rota {
   origem: EstacaoResumo;
   destino: EstacaoResumo;
   criterio: CriterioRota;
+  /** true quando calculada com ?alternativa=true (só linhas em operação normal). */
+  alternativa: boolean;
   tempoEstimadoSegundos: number;
   tempoEstimadoMinutos: number;
   distanciaMetros: number;
@@ -172,6 +174,8 @@ export interface RotaParams {
   origem: string;
   destino: string;
   criterio?: CriterioRota;
+  /** Evita linhas fora da operação normal (status desconhecido conta como normal). */
+  alternativa?: boolean;
 }
 
 // --- Conta e acesso ---

@@ -43,12 +43,16 @@ export const estacoesApi = {
 };
 
 export const rotasApi = {
-  calcular: (params: RotaParams) => api.get<Rota>('/rotas/calcular', { params }).then((r) => r.data),
+  calcular: ({ alternativa, ...params }: RotaParams) =>
+    api
+      .get<Rota>('/rotas/calcular', {
+        params: alternativa ? { ...params, alternativa: true } : params,
+      })
+      .then((r) => r.data),
 };
 
 export const authApi = {
-  login: (dados: LoginRequest) =>
-    api.post<LoginResponse>('/auth/login', dados).then((r) => r.data),
+  login: (dados: LoginRequest) => api.post<LoginResponse>('/auth/login', dados).then((r) => r.data),
   registrar: (dados: RegistroRequest) =>
     api.post<RegistroResponse>('/auth/registro', dados).then((r) => r.data),
 };

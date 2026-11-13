@@ -1,4 +1,4 @@
-import type { StatusOperacional } from '@/types/api';
+import type { Rota, StatusOperacional } from '@/types/api';
 
 export type Tom = 'success' | 'warning' | 'danger' | 'neutral';
 
@@ -26,6 +26,11 @@ export function infoStatus(status: StatusOperacional): InfoStatus {
 
 export function ehStatusNormal(status: StatusOperacional): boolean {
   return status === 'NORMAL' || status === 'DESCONHECIDO';
+}
+
+/** A rota passa por alguma linha fora da operação normal? (mesma regra do ?alternativa=true) */
+export function rotaTemLinhaComProblema(rota: Pick<Rota, 'trechos'>): boolean {
+  return rota.trechos.some((t) => !ehStatusNormal(t.statusLinha));
 }
 
 /** Status agregado de uma rota salva, como os badges de "Minhas rotas". */
