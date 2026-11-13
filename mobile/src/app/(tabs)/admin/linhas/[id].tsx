@@ -290,7 +290,7 @@ function SecaoStatus({
     <Card className="gap-3">
       <TituloSecao
         titulo="Status operacional"
-        descricao="O status manual prevalece sobre a atualização automática por algumas horas."
+        descricao="Vale na hora para todos, até a próxima mudança informada pela API."
       />
 
       {atual === undefined ? (

@@ -54,7 +54,7 @@ public class AdminLinhaService {
 				request.cor(), request.operadora(), request.tipoTransporte()));
 		LinhaTransporte salva = linhaRepository.salvar(linha);
 		grafoCache.invalidar();
-		// O mapa código -> id do cache de status precisa conhecer a linha nova.
+		
 		statusCache.invalidar();
 		return LinhaResumoResponse.de(salva);
 	}
@@ -81,7 +81,6 @@ public class AdminLinhaService {
 		return salvar(linha);
 	}
 
-	/** "Excluir" uma linha é desativá-la: ela é referenciada por estações, conexões e rotas salvas. */
 	public void desativar(Long id) {
 		LinhaTransporte linha = buscar(id);
 		linha.desativar();
@@ -111,7 +110,7 @@ public class AdminLinhaService {
 		return linhaService.listarEstacoes(id);
 	}
 
-	/** Status manual: prevalece sobre a API externa por um tempo (ver AtualizacaoStatusLinhaService). */
+	/** Status manual: vale como uma mudança da API; a próxima mudança da API externa o substitui. */
 	public LinhaStatusResponse alterarStatus(Long id, StatusLinhaRequest request) {
 		buscar(id);
 		LinhaStatus status = validando(() -> LinhaStatus.registrarPeloAdministrador(id, request.status(),

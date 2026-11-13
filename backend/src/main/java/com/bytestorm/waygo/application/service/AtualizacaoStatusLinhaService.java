@@ -1,44 +1,31 @@
 package com.bytestorm.waygo.application.service;
 
 import java.time.Clock;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.bytestorm.waygo.application.cache.StatusLinhasCache;
 import com.bytestorm.waygo.domain.entity.LinhaStatus;
-import com.bytestorm.waygo.domain.enums.OrigemStatus;
 import com.bytestorm.waygo.domain.enums.StatusOperacional;
 import com.bytestorm.waygo.domain.interfaces.FonteStatusLinhas;
 import com.bytestorm.waygo.domain.interfaces.LinhaStatusRepository;
 import com.bytestorm.waygo.domain.valueobject.StatusLinhaExterno;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class AtualizacaoStatusLinhaService {
 
 	private final FonteStatusLinhas fonteStatusLinhas;
 	private final LinhaStatusRepository linhaStatusRepository;
 	private final StatusLinhasCache cache;
 	private final Clock clock;
-	
-	private final Duration prioridadeAdmin;
-
-	public AtualizacaoStatusLinhaService(FonteStatusLinhas fonteStatusLinhas,
-			LinhaStatusRepository linhaStatusRepository, StatusLinhasCache cache, Clock clock,
-			@Value("${trilhos-agora.prioridade-admin:PT6H}") Duration prioridadeAdmin) {
-		this.fonteStatusLinhas = fonteStatusLinhas;
-		this.linhaStatusRepository = linhaStatusRepository;
-		this.cache = cache;
-		this.clock = clock;
-		this.prioridadeAdmin = prioridadeAdmin;
-	}
 
 	public int atualizar() {
 		List<StatusLinhaExterno> statusExternos = fonteStatusLinhas.buscarStatusAtuais();
@@ -57,10 +44,6 @@ public class AtualizacaoStatusLinhaService {
 			if (atual.isPresent() && atual.get() == externo.status()) {
 				continue;
 			}
-			if (definidoPeloAdministradorRecentemente(linhaId.get(), agora)) {
-				log.debug("Linha {} com status manual do administrador; API ignorada", externo.codigoLinha());
-				continue;
-			}
 
 			linhaStatusRepository.salvar(
 					LinhaStatus.registrarPelaApi(linhaId.get(), externo.status(), externo.descricao(), agora));
@@ -73,13 +56,6 @@ public class AtualizacaoStatusLinhaService {
 		log.info("Atualização de status concluída: {} de {} linhas mudaram de status", registrados,
 				statusExternos.size());
 		return registrados;
-	}
-
-	private boolean definidoPeloAdministradorRecentemente(Long linhaId, LocalDateTime agora) {
-		return linhaStatusRepository.buscarAtualPorLinha(linhaId)
-				.filter(status -> status.getOrigem() == OrigemStatus.ADMINISTRADOR)
-				.map(status -> status.getAtualizadoEm().plus(prioridadeAdmin).isAfter(agora))
-				.orElse(false);
 	}
 
 }
