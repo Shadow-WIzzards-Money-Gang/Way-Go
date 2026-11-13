@@ -1,4 +1,5 @@
 services:
+  # Oracle Database Free. Na primeira subida a inicialização leva alguns minutos.
   banco:
     container_name: banco-waygo
     image: gvenzl/oracle-free:23
@@ -8,3 +9,49 @@ services:
       - ORACLE_PASSWORD=secret
       - APP_USER=app
       - APP_USER_PASSWORD=app123
+
+  # API Spring Boot. As migrations do Flyway criam e populam o banco ao subir.
+  backend:
+    container_name: backend-waygo
+    build: ./backend
+    ports:
+      - "8080:8080"
+    env_file:
+      # Opcional: mesmas variáveis do backend/.env.example (chave da API Trilhos Agora, JWT...).
+      - path: ./backend/.env
+        required: false
+    environment:
+      # Dentro da rede do compose o banco é acessado pelo nome do serviço.
+      - PORT=8080
+      - DB_HOST=banco
+      - DB_PORT=1521
+      - DB_NAME=FREEPDB1
+      - DB_USERNAME=app
+      - DB_PASSWORD=app123
+    depends_on:
+      - banco
+    # Enquanto o Oracle inicializa a conexão falha; o contêiner tenta de novo até o banco aceitar.
+    restart: on-failure
+
+  # Servidor do Expo (Metro). Abra no Expo Go pelo QR code (docker compose logs -f mobile)
+  # ou no navegador em http://localhost:8081.
+  mobile:
+    container_name: mobile-waygo
+    build: ./mobile
+    ports:
+      - "8081:8081"
+    environment:
+      # IP da sua máquina na rede local (defina HOST_IP no .env da raiz). O celular usa esse
+      # endereço para baixar o bundle e, como EXPO_PUBLIC_API_HOST fica vazio, também para a API.
+      - REACT_NATIVE_PACKAGER_HOSTNAME=${HOST_IP:-localhost}
+      - EXPO_PUBLIC_API_HOST=
+      - EXPO_PUBLIC_API_PORT=8080
+    volumes:
+      # Código montado para refletir alterações sem rebuild; as dependências ficam na imagem.
+      - ./mobile:/app
+      - /app/node_modules
+      - /app/.expo
+    depends_on:
+      - backend
+    stdin_open: true
+    tty: true
