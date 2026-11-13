@@ -1,4 +1,4 @@
-import { ArrowRightLeft, CalendarClock, Route, SearchX } from 'lucide-react-native';
+import { ArrowRightLeft, CalendarClock, MapPin, Route, SearchX } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -14,6 +14,7 @@ import { LinhaBadge } from './LinhaBadge';
 import { StatusBadge } from './StatusBadge';
 import { Button } from './ui/Button';
 import { Chip } from './ui/Chip';
+import { PainelInferior } from './ui/PainelInferior';
 import { Skeleton } from './ui/Skeleton';
 import { EmptyState, ErrorState } from './ui/States';
 
@@ -23,8 +24,47 @@ export const CRITERIOS: { valor: CriterioRota; rotulo: string }[] = [
   { valor: 'MENOS_BALDEACOES', rotulo: 'Menos baldeações' },
 ];
 
+/** O que falta escolher para calcular a rota (orienta a dica do painel vazio). */
+export type EtapaPlanejamento = 'ambos' | 'origem' | 'destino';
+
+const GUIA: Record<EtapaPlanejamento, { titulo: string; mensagem: string }> = {
+  ambos: {
+    titulo: 'Para onde vamos?',
+    mensagem: 'Toque numa estação do mapa ou escolha a origem e o destino acima.',
+  },
+  origem: {
+    titulo: 'De onde você sai?',
+    mensagem: 'Toque na estação de partida no mapa ou escolha a origem acima.',
+  },
+  destino: {
+    titulo: 'Agora, o destino',
+    mensagem: 'Toque na estação de chegada no mapa ou escolha o destino acima.',
+  },
+};
+
+/** Dica compacta do painel vazio: ocupa pouco espaço para o mapa continuar visível. */
+function GuiaPlanejamento({ faltando }: { faltando: EtapaPlanejamento }) {
+  const guia = GUIA[faltando];
+  return (
+    <View className="flex-row items-center gap-3 pb-1" accessibilityLiveRegion="polite">
+      <View className="h-11 w-11 items-center justify-center rounded-full bg-primary-soft">
+        {faltando === 'destino' ? (
+          <MapPin size={20} color={colors.primary.DEFAULT} />
+        ) : (
+          <Route size={20} color={colors.primary.DEFAULT} />
+        )}
+      </View>
+      <View className="flex-1">
+        <Text className="text-base font-semibold text-ink">{guia.titulo}</Text>
+        <Text className="text-sm text-ink-muted">{guia.mensagem}</Text>
+      </View>
+    </View>
+  );
+}
+
 interface RotaSugeridaPanelProps {
   temSelecao: boolean;
+  faltando: EtapaPlanejamento;
   rota: Rota | undefined;
   carregando: boolean;
   erro: unknown;
@@ -118,6 +158,7 @@ function ConteudoRota({ rota }: { rota: Rota }) {
 /** Painel inferior do mapa com a rota calculada. Toque na alça para recolher/expandir. */
 export function RotaSugeridaPanel({
   temSelecao,
+  faltando,
   rota,
   carregando,
   erro,
@@ -135,13 +176,7 @@ export function RotaSugeridaPanel({
 
   let conteudo;
   if (!temSelecao) {
-    conteudo = (
-      <EmptyState
-        icone={Route}
-        titulo="Para onde vamos?"
-        mensagem="Escolha a estação de origem e a de destino para ver a melhor rota."
-      />
-    );
+    conteudo = <GuiaPlanejamento faltando={faltando} />;
   } else if (alternativaAtiva && erro instanceof ApiError && erro.tipo === 'sem-rota') {
     conteudo = (
       <EmptyState
@@ -174,16 +209,7 @@ export function RotaSugeridaPanel({
   }
 
   return (
-    <View
-      className="rounded-t-3xl bg-surface px-4 pb-4"
-      style={{
-        shadowColor: '#0F172A',
-        shadowOpacity: 0.1,
-        shadowRadius: 20,
-        shadowOffset: { width: 0, height: -4 },
-        elevation: 12,
-      }}
-    >
+    <PainelInferior>
       <Pressable
         onPress={() => setExpandido((v) => !v)}
         accessibilityRole="button"
@@ -244,6 +270,6 @@ export function RotaSugeridaPanel({
           <Button rotulo="Salvar rota" onPress={aoSalvar} className="flex-1" />
         </View>
       )}
-    </View>
+    </PainelInferior>
   );
 }
