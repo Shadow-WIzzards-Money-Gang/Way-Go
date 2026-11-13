@@ -5,10 +5,13 @@ import java.util.List;
 import java.util.Optional;
 
 import com.bytestorm.waygo.domain.entity.Estacao;
+import com.bytestorm.waygo.domain.valueobject.Pagina;
 
 public interface EstacaoRepository {
 
 	List<Estacao> listarTodas();
+
+	Pagina<Estacao> listarPaginado(String busca, boolean somenteIntegracoes, int pagina, int tamanho);
 
 	Optional<Estacao> buscarPorId(Long id);
 

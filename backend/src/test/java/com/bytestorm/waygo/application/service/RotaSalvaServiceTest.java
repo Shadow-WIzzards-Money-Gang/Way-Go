@@ -27,6 +27,7 @@ import com.bytestorm.waygo.domain.exception.RecursoNaoEncontradoException;
 import com.bytestorm.waygo.domain.exception.RequisicaoInvalidaException;
 import com.bytestorm.waygo.domain.interfaces.EstacaoRepository;
 import com.bytestorm.waygo.domain.interfaces.RotaSalvaRepository;
+import com.bytestorm.waygo.domain.valueobject.Pagina;
 
 /** Só o banco é simulado; as regras do service e do domínio são as reais. */
 class RotaSalvaServiceTest {
@@ -90,6 +91,11 @@ class RotaSalvaServiceTest {
 		@Override
 		public List<Estacao> listarTodas() {
 			return new ArrayList<>(estacoes.values());
+		}
+
+		@Override
+		public Pagina<Estacao> listarPaginado(String busca, boolean somenteIntegracoes, int pagina, int tamanho) {
+			throw new UnsupportedOperationException("não usado neste teste");
 		}
 
 		@Override

@@ -6,12 +6,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bytestorm.waygo.application.dto.response.ConexaoResponse;
 import com.bytestorm.waygo.application.dto.response.EstacaoDetalheResponse;
 import com.bytestorm.waygo.application.dto.response.EstacaoResumoResponse;
 import com.bytestorm.waygo.application.dto.response.LinhaDaEstacaoResponse;
+import com.bytestorm.waygo.application.dto.response.PaginaResponse;
 import com.bytestorm.waygo.application.service.ConexaoService;
 import com.bytestorm.waygo.application.service.EstacaoService;
 
@@ -28,8 +30,12 @@ public class EstacaoController {
 	}
 
 	@GetMapping
-	public ResponseEntity<List<EstacaoResumoResponse>> listar() {
-		return ResponseEntity.ok(estacaoService.listar());
+	public ResponseEntity<PaginaResponse<EstacaoResumoResponse>> listar(
+			@RequestParam(defaultValue = "0") int pagina,
+			@RequestParam(defaultValue = "" + EstacaoService.TAMANHO_PADRAO) int tamanho,
+			@RequestParam(required = false) String busca,
+			@RequestParam(defaultValue = "false") boolean integracoes) {
+		return ResponseEntity.ok(estacaoService.listar(pagina, tamanho, busca, integracoes));
 	}
 
 	@GetMapping("/{id}")

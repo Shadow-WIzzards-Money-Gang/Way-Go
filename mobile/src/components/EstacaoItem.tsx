@@ -3,17 +3,23 @@ import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { colors } from '@/theme/colors';
-import type { EstacaoRede, LinhaRede } from '@/types/api';
+import type { LinhaRede } from '@/types/api';
 
 import { LinhaBadge } from './LinhaBadge';
 
+/** Serve tanto para EstacaoRede (/rede) quanto EstacaoResumo (/estacoes). */
+export interface EstacaoBasica {
+  id: number;
+  nome: string;
+}
+
 interface EstacaoItemProps {
-  estacao: EstacaoRede;
+  estacao: EstacaoBasica;
   /** Linhas que passam pela estação, já ordenadas pelo código. */
   linhas: LinhaRede[];
   /** Alguma linha da estação está fora do normal. */
   comAlerta: boolean;
-  onPress: (estacao: EstacaoRede) => void;
+  onPress: (estacao: EstacaoBasica) => void;
 }
 
 /** Card da lista de estações: nome, linhas que atendem e alerta de status. */

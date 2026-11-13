@@ -1,11 +1,13 @@
 import type {
   EstacaoDetalhe,
   EstacaoResumo,
+  EstacoesParams,
   LinhaDetalhe,
   LinhaResumo,
   LinhaStatus,
   LoginRequest,
   LoginResponse,
+  Pagina,
   Rede,
   RegistroRequest,
   RegistroResponse,
@@ -31,7 +33,12 @@ export const linhasApi = {
 };
 
 export const estacoesApi = {
-  listar: () => api.get<EstacaoResumo[]>('/estacoes').then((r) => r.data),
+  listar: ({ busca, ...params }: EstacoesParams) =>
+    api
+      .get<Pagina<EstacaoResumo>>('/estacoes', {
+        params: { ...params, busca: busca?.trim() || undefined },
+      })
+      .then((r) => r.data),
   buscar: (id: number) => api.get<EstacaoDetalhe>(`/estacoes/${id}`).then((r) => r.data),
 };
 

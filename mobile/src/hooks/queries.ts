@@ -14,6 +14,7 @@ import { cancelarTodosOsLembretes } from '@/services/notifications';
 import { useRotasLocais } from '@/store/rotasLocais';
 import { useLogado, useSessao } from '@/store/sessao';
 import type {
+  EstacoesParams,
   LoginRequest,
   RegistroRequest,
   RotaParams,
@@ -27,7 +28,7 @@ export const queryKeys = {
   linhas: ['linhas'] as const,
   linha: (id: number) => ['linhas', id] as const,
   linhaStatus: (id: number) => ['linhas', id, 'status'] as const,
-  estacoes: ['estacoes'] as const,
+  estacoes: (params: EstacoesParams) => ['estacoes', 'pagina', params] as const,
   estacao: (id: number) => ['estacoes', id] as const,
   rota: (params: RotaParams) => ['rotas', params] as const,
   /** Tudo que depende do usuário logado fica sob 'conta' e é descartado ao sair. */
@@ -63,11 +64,13 @@ export function useLinhaStatus(id: number) {
   });
 }
 
-export function useEstacoes() {
+/** Uma página de /estacoes. Mantém a página anterior na tela enquanto a próxima carrega. */
+export function useEstacoes(params: EstacoesParams) {
   return useQuery({
-    queryKey: queryKeys.estacoes,
-    queryFn: estacoesApi.listar,
-    staleTime: 1000 * 60 * 60,
+    queryKey: queryKeys.estacoes(params),
+    queryFn: () => estacoesApi.listar(params),
+    placeholderData: keepPreviousData,
+    staleTime: 1000 * 60 * 10,
   });
 }
 

@@ -5,7 +5,7 @@ App mobile do WayGo (React Native + Expo + NativeWind). Mostra o status das linh
 | Tela | O que faz | API |
 |---|---|---|
 | **Mapa** | Origem/destino, rota sugerida com trechos, baldeações e avisos; critério (equilibrado, menor tempo, menos baldeações) | `GET /rotas/calcular`, `GET /rede` |
-| **Estações** | Busca e filtro de todas as estações; detalhe com linhas, status, integração e atalhos "Sair daqui"/"Ir para cá" | `GET /rede`, `GET /estacoes/{id}` |
+| **Estações** | Lista paginada (20 por página) com busca e filtro feitos no servidor; detalhe com linhas, status, integração e atalhos "Sair daqui"/"Ir para cá" | `GET /estacoes?pagina&tamanho&busca&integracoes`, `GET /rede`, `GET /estacoes/{id}` |
 | **Linhas** | Lista e filtro por tipo; detalhe com timeline de estações e baldeações | `GET /rede`, `GET /linhas/{id}`, `GET /linhas/{id}/status` |
 | **Rotas** | Rotas salvas na conta (exige login), lembrete no aparelho e alertas | `GET/POST/PUT/DELETE /rotas` |
 | **Conta** | Login, cadastro e "Minha conta", pelo avatar no canto das telas | `POST /auth/login`, `POST /auth/registro`, `GET /usuarios/me` |

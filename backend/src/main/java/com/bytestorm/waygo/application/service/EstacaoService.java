@@ -9,13 +9,16 @@ import org.springframework.transaction.annotation.Transactional;
 import com.bytestorm.waygo.application.dto.response.EstacaoDetalheResponse;
 import com.bytestorm.waygo.application.dto.response.EstacaoResumoResponse;
 import com.bytestorm.waygo.application.dto.response.LinhaDaEstacaoResponse;
+import com.bytestorm.waygo.application.dto.response.PaginaResponse;
 import com.bytestorm.waygo.domain.entity.Estacao;
 import com.bytestorm.waygo.domain.entity.LinhaEstacao;
 import com.bytestorm.waygo.domain.entity.LinhaTransporte;
 import com.bytestorm.waygo.domain.exception.RecursoNaoEncontradoException;
+import com.bytestorm.waygo.domain.exception.RequisicaoInvalidaException;
 import com.bytestorm.waygo.domain.interfaces.EstacaoRepository;
 import com.bytestorm.waygo.domain.interfaces.LinhaEstacaoRepository;
 import com.bytestorm.waygo.domain.interfaces.LinhaTransporteRepository;
+import com.bytestorm.waygo.domain.util.Textos;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,10 +31,22 @@ public class EstacaoService {
 	private final LinhaEstacaoRepository linhaEstacaoRepository;
 	private final LinhaTransporteRepository linhaRepository;
 
-	public List<EstacaoResumoResponse> listar() {
-		return estacaoRepository.listarTodas().stream()
-				.map(EstacaoResumoResponse::de)
-				.toList();
+	public static final int TAMANHO_PADRAO = 20;
+	public static final int TAMANHO_MAXIMO = 100;
+
+	public PaginaResponse<EstacaoResumoResponse> listar(int pagina, int tamanho, String busca,
+			boolean somenteIntegracoes) {
+		if (pagina < 0) {
+			throw new RequisicaoInvalidaException("O parâmetro 'pagina' deve ser maior ou igual a 0");
+		}
+		if (tamanho < 1 || tamanho > TAMANHO_MAXIMO) {
+			throw new RequisicaoInvalidaException(
+					"O parâmetro 'tamanho' deve estar entre 1 e " + TAMANHO_MAXIMO);
+		}
+		String termo = Textos.normalizar(busca).replace("%", "").replace("_", "");
+		return PaginaResponse.de(estacaoRepository
+				.listarPaginado(termo, somenteIntegracoes, pagina, tamanho)
+				.map(EstacaoResumoResponse::de));
 	}
 
 	public EstacaoDetalheResponse buscarPorId(Long id) {

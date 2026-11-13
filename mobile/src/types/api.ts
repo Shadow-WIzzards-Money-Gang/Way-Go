@@ -34,6 +34,25 @@ export interface EstacaoResumo {
   ativa: boolean;
 }
 
+/** Resposta paginada do backend (PaginaResponse). `pagina` começa em 0. */
+export interface Pagina<T> {
+  conteudo: T[];
+  pagina: number;
+  tamanho: number;
+  totalItens: number;
+  totalPaginas: number;
+  primeira: boolean;
+  ultima: boolean;
+}
+
+export interface EstacoesParams {
+  pagina: number;
+  tamanho?: number;
+  busca?: string;
+  /** Só estações atendidas por mais de uma linha. */
+  integracoes?: boolean;
+}
+
 export interface LinhaDaEstacao {
   id: number;
   nome: string;
