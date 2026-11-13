@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/telas/icone-way-go.png" alt="WayGo" width="96" />
+  <img src="docs/icone-way-go.png" alt="WayGo" width="96" />
 </p>
 
 <h1 align="center">WayGo</h1>
