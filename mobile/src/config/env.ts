@@ -58,10 +58,15 @@ function normalizarPrefixo(prefixo: string): string {
   return comBarra.replace(/\/+$/, '');
 }
 
-const porta = vars.EXPO_PUBLIC_API_PORT ? `:${vars.EXPO_PUBLIC_API_PORT}` : '';
+function resolverOrigem(): string {
+  const host = resolverHost().replace(/\/+$/, '');
+  if (/^https?:\/\//i.test(host)) return host;
+  const porta = vars.EXPO_PUBLIC_API_PORT ? `:${vars.EXPO_PUBLIC_API_PORT}` : '';
+  return `${vars.EXPO_PUBLIC_API_PROTOCOL}://${host}${porta}`;
+}
 
 export const env = {
-  apiBaseUrl: `${vars.EXPO_PUBLIC_API_PROTOCOL}://${resolverHost()}${porta}${normalizarPrefixo(vars.EXPO_PUBLIC_API_PREFIX)}`,
+  apiBaseUrl: `${resolverOrigem()}${normalizarPrefixo(vars.EXPO_PUBLIC_API_PREFIX)}`,
   apiTimeoutMs: vars.EXPO_PUBLIC_API_TIMEOUT_MS,
   statusRefreshMs: vars.EXPO_PUBLIC_STATUS_REFRESH_MS,
 } as const;

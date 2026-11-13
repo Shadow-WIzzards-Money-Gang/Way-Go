@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import { armazenamentoSeguro } from '@/lib/armazenamentoSeguro';
+import { log } from '@/lib/log';
 import type { LoginResponse } from '@/types/api';
 
 const CHAVE = 'waygo.sessao';
@@ -44,12 +45,17 @@ export const useSessao = create<SessaoState>((set) => ({
       const bruto = await armazenamentoSeguro.ler(CHAVE);
       const lida: unknown = bruto ? JSON.parse(bruto) : null;
       if (ehSessao(lida) && !sessaoExpirada(lida)) {
+        log.info('sessao', `Sessão restaurada (${lida.email}, expira em ${lida.expiraEm})`);
         set({ sessao: lida, carregada: true });
         return;
       }
-      if (bruto) await armazenamentoSeguro.apagar(CHAVE);
-    } catch {
+      if (bruto) {
+        log.info('sessao', 'Sessão salva expirada ou inválida: descartada');
+        await armazenamentoSeguro.apagar(CHAVE);
+      }
+    } catch (erro) {
       // Armazenamento ilegível: segue sem sessão.
+      log.erro('sessao', 'Não foi possível ler a sessão salva', erro);
     }
     set({ sessao: null, carregada: true });
   },
@@ -59,10 +65,12 @@ export const useSessao = create<SessaoState>((set) => ({
       email: email.trim().toLowerCase(),
       expiraEm: resposta.expiraEm,
     };
+    log.info('sessao', `Login de ${sessao.email} (expira em ${sessao.expiraEm})`);
     set({ sessao, carregada: true });
     await armazenamentoSeguro.gravar(CHAVE, JSON.stringify(sessao)).catch(() => undefined);
   },
   sair: async () => {
+    log.info('sessao', 'Sessão encerrada');
     set({ sessao: null });
     await armazenamentoSeguro.apagar(CHAVE).catch(() => undefined);
   },

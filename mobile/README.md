@@ -43,6 +43,8 @@ Depois de alterar o `.env`, reinicie o Metro com `npx expo start -c`.
 ### Problemas comuns
 
 - **"Não foi possível conectar ao servidor" no navegador:** o backend precisa liberar CORS para a origem do app (`CORS_ORIGENS_PERMITIDAS`, por padrão `http://localhost:*`). Na web o mapa não aparece; use o Expo Go para a experiência completa.
+- **Backend hospedado (ex.: Render) não responde:** use `EXPO_PUBLIC_API_PROTOCOL=https`, `EXPO_PUBLIC_API_HOST=way-go.onrender.com` (sem `https://`) e `EXPO_PUBLIC_API_PORT` **vazia**: o serviço responde na porta 443, não na 8080. O plano gratuito do Render "dorme" e leva até ~1 min para acordar, então use um `EXPO_PUBLIC_API_TIMEOUT_MS` alto (60000). Reinicie com `npx expo start -c`.
+- **Para ver o que o app está chamando:** os logs aparecem no terminal do Metro. Ao abrir o app sai a `URL base`, e cada requisição aparece com `→ Buscando GET /rede`, `← 200 GET /rede (120 ms)` ou `✕ Sem resposta ... URL completa: ...`.
 - **Mesmo erro no celular físico:** confira se o celular está na mesma rede Wi-Fi do PC e se o Firewall do Windows permite conexões de entrada na porta 8080.
 
 ## Scripts

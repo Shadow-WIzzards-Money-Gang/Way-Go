@@ -39,6 +39,7 @@ npx expo-doctor             # diagnóstico de dependências e configuração
 - Toda variável fica em `.env` (fora do git), com `.env.example` como modelo versionado. Ao criar uma variável, atualize os dois.
 - Só variáveis com prefixo `EXPO_PUBLIC_` chegam ao app, e **ficam visíveis no bundle**. Nunca coloque segredos nelas.
 - Leia variáveis **apenas** em `src/config/env.ts`, que as valida com zod e expõe `env.apiBaseUrl`, `env.apiTimeoutMs` e `env.statusRefreshMs`. Nenhum outro arquivo usa `process.env`.
+- `EXPO_PUBLIC_API_HOST` aceita só o host (`way-go.onrender.com`) ou a URL completa (`https://way-go.onrender.com`; nesse caso protocolo e porta vêm dela). Em servidor hospedado, deixe `EXPO_PUBLIC_API_PORT` vazia.
 - Com `EXPO_PUBLIC_API_HOST` vazio, o app usa o IP da máquina do Metro (funciona em celular físico). `localhost` não funciona no emulador Android: use `10.0.2.2`.
 
 ## Arquitetura
@@ -57,7 +58,7 @@ src/
   types/api.ts          # espelho dos DTOs Java do backend
   hooks/                # queries do React Query e hooks de domínio
   store/                # estado do cliente (zustand): planejamento, sessão (token) e dados locais das rotas
-  lib/                  # query client, armazenamento seguro e ações da conta (abrir login, sair)
+  lib/                  # query client, armazenamento seguro, logs e ações da conta (abrir login, sair)
   services/             # integrações do dispositivo (notificações)
   components/           # componentes de domínio
   components/ui/        # primitivos visuais (Button, Card, Badge, Chip, Skeleton, States...)
@@ -80,6 +81,11 @@ Fluxo de dados: **tela → hook (`src/hooks/queries.ts`) → função da API (`s
 - Os erros chegam como `ApiError` (tipos `rede`, `timeout`, `nao-autorizado`, `nao-encontrado`, `conflito`, `sem-rota`, `invalido`, `servidor`). Trate pelo `tipo`, não pelo texto. O `ErroResponse` do backend vem em `message`.
 - Para o status das linhas, prefira `/rede`: uma chamada traz todas as linhas com `status`. Evite N chamadas a `/linhas/{id}/status`.
 - `/rotas/calcular` recebe **nomes** de estação (origem/destino), não ids. Já as rotas salvas (`/rotas`, `/rotas/{id}`) usam **ids** de estação.
+
+### Logs
+- Use `log.info`/`log.erro` de `src/lib/log.ts` (escopo + mensagem), nunca `console.*` solto. Só aparecem em desenvolvimento (`__DEV__`), no terminal do Metro.
+- As requisições já são logadas pelo `api/client.ts` (ida, resposta com status e duração, falhas com a URL completa). Não logue de novo nas telas.
+- Nunca logue o token nem senhas.
 
 ### Sessão e conta
 - O token JWT fica no armazenamento seguro do aparelho (`expo-secure-store`, via `lib/armazenamentoSeguro.ts`; na web, AsyncStorage) e é lido só por `store/sessao.ts`.
