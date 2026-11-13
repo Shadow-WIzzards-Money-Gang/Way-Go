@@ -16,7 +16,7 @@ import { useRedeIndex } from '@/hooks/useRedeIndex';
 import { colors } from '@/theme/colors';
 import { formatarHora } from '@/utils/format';
 import { infoStatus } from '@/utils/status';
-import { contemTexto, formatarNomeLinha } from '@/utils/text';
+import { compararCodigos, contemTexto, formatarNomeLinha } from '@/utils/text';
 
 export default function LinhaScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -46,7 +46,7 @@ export default function LinhaScreen() {
       .filter((outra) => outra !== linhaId)
       .map((outra) => index.linhaPorId.get(outra)?.codigo)
       .filter((c): c is string => Boolean(c))
-      .sort((a, b) => a.localeCompare(b, 'pt-BR', { numeric: true }));
+      .sort(compararCodigos);
 
   const relatar = () =>
     Alert.alert(

@@ -1,20 +1,23 @@
 import { Search, X } from 'lucide-react-native';
-import { Pressable, TextInput, View } from 'react-native';
+import type { Ref } from 'react';
+import { Pressable, TextInput, type TextInputInstance, View } from 'react-native';
 
 import { colors } from '@/theme/colors';
 
 interface SearchInputProps {
+  ref?: Ref<TextInputInstance>;
   valor: string;
   aoMudar: (texto: string) => void;
   placeholder: string;
   autoFocus?: boolean;
 }
 
-export function SearchInput({ valor, aoMudar, placeholder, autoFocus }: SearchInputProps) {
+export function SearchInput({ ref, valor, aoMudar, placeholder, autoFocus }: SearchInputProps) {
   return (
     <View className="min-h-[48px] flex-row items-center gap-2 rounded-xl border border-border bg-surface px-3">
       <Search size={18} color={colors.ink.subtle} />
       <TextInput
+        ref={ref}
         value={valor}
         onChangeText={aoMudar}
         placeholder={placeholder}

@@ -9,6 +9,17 @@ export function contemTexto(alvo: string, busca: string): boolean {
   return termo === '' || normalizar(alvo).includes(termo);
 }
 
+// Comparadores criados uma única vez. No Hermes, `a.localeCompare(b, 'pt-BR')` monta um
+// Intl.Collator novo a cada chamada: ordenar centenas de estações assim trava a thread JS.
+const COLLATOR_NOMES = new Intl.Collator('pt-BR', { sensitivity: 'base' });
+const COLLATOR_CODIGOS = new Intl.Collator('pt-BR', { numeric: true });
+
+/** Ordem alfabética em português ("Água Branca" antes de "Brás"). Use em `.sort()`. */
+export const compararNomes = (a: string, b: string): number => COLLATOR_NOMES.compare(a, b);
+
+/** Ordem numérica de códigos de linha ("2" antes de "11"). Use em `.sort()`. */
+export const compararCodigos = (a: string, b: string): number => COLLATOR_CODIGOS.compare(a, b);
+
 /** "ana@email.com" -> "A". Usa o primeiro caractere alfanumérico; sem nenhum, "?". */
 export function inicialDoEmail(email: string | null | undefined): string {
   const caractere = normalizar(email ?? '').match(/[\p{L}\p{N}]/u)?.[0];

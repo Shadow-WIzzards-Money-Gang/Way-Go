@@ -14,7 +14,7 @@ import { useRede } from '@/hooks/queries';
 import { extremosDaLinha, useRedeIndex } from '@/hooks/useRedeIndex';
 import { colors } from '@/theme/colors';
 import type { LinhaRede, TipoTransporte } from '@/types/api';
-import { contemTexto } from '@/utils/text';
+import { compararCodigos, contemTexto } from '@/utils/text';
 
 const FILTROS: { valor: TipoTransporte | null; rotulo: string }[] = [
   { valor: null, rotulo: 'Todas' },
@@ -34,7 +34,7 @@ export default function LinhasScreen() {
       (rede?.linhas ?? [])
         .filter((l) => (tipo ? l.tipoTransporte === tipo : true))
         .filter((l) => contemTexto(l.nome, busca) || l.codigo === busca.trim())
-        .sort((a, b) => a.codigo.localeCompare(b.codigo, 'pt-BR', { numeric: true })),
+        .sort((a, b) => compararCodigos(a.codigo, b.codigo)),
     [rede, busca, tipo],
   );
 

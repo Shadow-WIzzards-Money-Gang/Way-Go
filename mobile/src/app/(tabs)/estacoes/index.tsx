@@ -18,6 +18,7 @@ import { colors } from '@/theme/colors';
 import type { EstacaoResumo, LinhaRede } from '@/types/api';
 import { pluralizar } from '@/utils/format';
 import { ehStatusNormal } from '@/utils/status';
+import { compararCodigos } from '@/utils/text';
 
 type Filtro = 'todas' | 'integracoes';
 
@@ -33,7 +34,7 @@ function linhasDa(estacaoId: number, index: RedeIndex): LinhaRede[] {
   return (index.estacaoPorId.get(estacaoId)?.linhaIds ?? [])
     .map((id) => index.linhaPorId.get(id))
     .filter((l): l is LinhaRede => l !== undefined)
-    .sort((a, b) => a.codigo.localeCompare(b.codigo, 'pt-BR', { numeric: true }));
+    .sort((a, b) => compararCodigos(a.codigo, b.codigo));
 }
 
 export default function EstacoesScreen() {
@@ -126,7 +127,9 @@ export default function EstacoesScreen() {
                   icone={SearchX}
                   titulo="Nenhuma estação encontrada"
                   mensagem={busca ? 'Confira a grafia ou tente outro nome.' : undefined}
-                  acao={filtrando ? { rotulo: 'Limpar filtros', onPress: limparFiltros } : undefined}
+                  acao={
+                    filtrando ? { rotulo: 'Limpar filtros', onPress: limparFiltros } : undefined
+                  }
                 />
               )
             }

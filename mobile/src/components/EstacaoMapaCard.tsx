@@ -19,6 +19,8 @@ interface EstacaoMapaCardProps {
   papel: CampoEstacao | null;
   aoDefinir: (campo: CampoEstacao) => void;
   aoVerDetalhes: () => void;
+  /** Toque numa das linhas da estação: abre os detalhes da linha. */
+  aoAbrirLinha: (linhaId: number) => void;
   aoFechar: () => void;
 }
 
@@ -35,6 +37,7 @@ export function EstacaoMapaCard({
   papel,
   aoDefinir,
   aoVerDetalhes,
+  aoAbrirLinha,
   aoFechar,
 }: EstacaoMapaCardProps) {
   const comProblema = linhas.filter((l) => !ehStatusNormal(l.status));
@@ -75,10 +78,14 @@ export function EstacaoMapaCard({
       {linhas.length > 0 && (
         <View className="flex-row flex-wrap gap-2">
           {linhas.map((l) => (
-            <View
+            <Pressable
               key={l.id}
-              className="flex-row items-center gap-1.5 rounded-full border border-border bg-background py-1 pl-1 pr-2.5"
+              onPress={() => aoAbrirLinha(l.id)}
+              accessibilityRole="button"
               accessibilityLabel={`${formatarNomeLinha(l.nome)}, ${infoStatus(l.status).rotulo}`}
+              accessibilityHint="Abre as estações e o status da linha"
+              hitSlop={4}
+              className="min-h-[36px] flex-row items-center gap-1.5 rounded-full border border-border bg-background pl-1 pr-2 active:opacity-70"
             >
               <LinhaBadge codigo={l.codigo} cor={l.cor} tamanho="sm" />
               <View
@@ -94,7 +101,8 @@ export function EstacaoMapaCard({
               <Text className="text-xs font-medium text-ink-muted">
                 {infoStatus(l.status).rotulo}
               </Text>
-            </View>
+              <ChevronRight size={14} color={colors.ink.subtle} />
+            </Pressable>
           ))}
         </View>
       )}

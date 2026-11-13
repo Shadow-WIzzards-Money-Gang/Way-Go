@@ -20,6 +20,7 @@ import { useLogado } from '@/store/sessao';
 import { colors } from '@/theme/colors';
 import type { LinhaRede } from '@/types/api';
 import { rotaTemLinhaComProblema } from '@/utils/status';
+import { compararCodigos } from '@/utils/text';
 
 const ALTURA_CARD_ROTA = 120;
 
@@ -74,7 +75,7 @@ export default function MapaScreen() {
   const linhasDaSelecionada = (selecionada?.linhaIds ?? [])
     .map((id) => index.linhaPorId.get(id))
     .filter((l): l is LinhaRede => l !== undefined)
-    .sort((a, b) => a.codigo.localeCompare(b.codigo, 'pt-BR', { numeric: true }));
+    .sort((a, b) => compararCodigos(a.codigo, b.codigo));
   const papelDaSelecionada: CampoEstacao | null =
     selecionada && origem?.id === selecionada.id
       ? 'origem'
@@ -108,6 +109,9 @@ export default function MapaScreen() {
     if (!selecionada) return;
     router.push({ pathname: '/estacoes/[id]', params: { id: String(selecionada.id) } });
   };
+
+  const abrirLinha = (linhaId: number) =>
+    router.push({ pathname: '/linhas/[id]', params: { id: String(linhaId) } });
 
   const faltando: EtapaPlanejamento =
     !origem && !destino ? 'ambos' : !origem ? 'origem' : 'destino';
@@ -217,6 +221,7 @@ export default function MapaScreen() {
                 papel={papelDaSelecionada}
                 aoDefinir={definirPelaEstacao}
                 aoVerDetalhes={verDetalhes}
+                aoAbrirLinha={abrirLinha}
                 aoFechar={fecharEstacao}
               />
             </PainelInferior>
@@ -234,6 +239,7 @@ export default function MapaScreen() {
               mostrarOpcaoAlternativa={sugeridaTemProblema}
               alternativaAtiva={alternativaAtiva}
               aoAlternar={alternarRota}
+              aoAbrirLinha={abrirLinha}
               aoTentarNovamente={() => void rotaQueryAtual.refetch()}
               aoAgendar={() => abrirRotaSalva(true)}
               aoSalvar={() => abrirRotaSalva(false)}

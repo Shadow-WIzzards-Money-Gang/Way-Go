@@ -1,4 +1,11 @@
-import { ArrowRightLeft, CalendarClock, MapPin, Route, SearchX } from 'lucide-react-native';
+import {
+  ArrowRightLeft,
+  CalendarClock,
+  ChevronRight,
+  MapPin,
+  Route,
+  SearchX,
+} from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -75,6 +82,8 @@ interface RotaSugeridaPanelProps {
   /** Exibindo a rota calculada com ?alternativa=true. */
   alternativaAtiva: boolean;
   aoAlternar: (alternativa: boolean) => void;
+  /** Toque num trecho da rota: abre os detalhes da linha. */
+  aoAbrirLinha: (linhaId: number) => void;
   aoTentarNovamente: () => void;
   aoAgendar: () => void;
   aoSalvar: () => void;
@@ -84,13 +93,26 @@ function contarEstacoes(rota: Rota): number {
   return new Set(rota.trechos.flatMap((t) => t.estacoes.map((e) => e.id))).size;
 }
 
-function CardTrecho({ trecho }: { trecho: TrechoRota }) {
+function CardTrecho({
+  trecho,
+  aoAbrirLinha,
+}: {
+  trecho: TrechoRota;
+  aoAbrirLinha: (linhaId: number) => void;
+}) {
+  const nome = formatarNomeLinha(trecho.linha.nome);
   return (
-    <View className="flex-row items-center gap-3 rounded-xl bg-background p-3">
+    <Pressable
+      onPress={() => aoAbrirLinha(trecho.linha.id)}
+      accessibilityRole="button"
+      accessibilityLabel={`${nome}, de ${trecho.embarque.nome} até ${trecho.desembarque.nome}`}
+      accessibilityHint="Abre as estações e o status da linha"
+      className="flex-row items-center gap-3 rounded-xl bg-background p-3 active:opacity-70"
+    >
       <LinhaBadge codigo={trecho.linha.codigo} cor={trecho.linha.cor} />
       <View className="flex-1">
         <Text className="font-semibold text-ink" numberOfLines={1}>
-          {formatarNomeLinha(trecho.linha.nome)}
+          {nome}
         </Text>
         <Text className="text-sm text-ink-muted" numberOfLines={1}>
           {trecho.embarque.nome} → {trecho.desembarque.nome}
@@ -102,11 +124,18 @@ function CardTrecho({ trecho }: { trecho: TrechoRota }) {
         </Text>
       </View>
       {trecho.statusLinha !== 'NORMAL' && <StatusBadge status={trecho.statusLinha} />}
-    </View>
+      <ChevronRight size={18} color={colors.ink.subtle} />
+    </Pressable>
   );
 }
 
-function ConteudoRota({ rota }: { rota: Rota }) {
+function ConteudoRota({
+  rota,
+  aoAbrirLinha,
+}: {
+  rota: Rota;
+  aoAbrirLinha: (linhaId: number) => void;
+}) {
   const linhas = new Set(rota.trechos.map((t) => t.linha.id)).size;
   return (
     <Animated.View entering={FadeIn.duration(200)}>
@@ -133,7 +162,7 @@ function ConteudoRota({ rota }: { rota: Rota }) {
           const baldeacao = rota.baldeacoes[i];
           return (
             <View key={trecho.ordem} className="gap-2">
-              <CardTrecho trecho={trecho} />
+              <CardTrecho trecho={trecho} aoAbrirLinha={aoAbrirLinha} />
               {i < rota.trechos.length - 1 && baldeacao && (
                 <View className="flex-row items-center gap-2 px-3">
                   <ArrowRightLeft size={14} color={colors.ink.muted} />
@@ -167,6 +196,7 @@ export function RotaSugeridaPanel({
   mostrarOpcaoAlternativa,
   alternativaAtiva,
   aoAlternar,
+  aoAbrirLinha,
   aoTentarNovamente,
   aoAgendar,
   aoSalvar,
@@ -205,7 +235,7 @@ export function RotaSugeridaPanel({
       </View>
     );
   } else {
-    conteudo = <ConteudoRota rota={rota} />;
+    conteudo = <ConteudoRota rota={rota} aoAbrirLinha={aoAbrirLinha} />;
   }
 
   return (

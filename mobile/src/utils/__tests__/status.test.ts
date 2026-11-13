@@ -4,7 +4,13 @@ import type { Rota, StatusOperacional } from '@/types/api';
 
 import { corDeTextoSobre, corSegura } from '../color';
 import { infoStatus, rotaTemLinhaComProblema, statusDaRota } from '../status';
-import { contemTexto, formatarNomeLinha, normalizar } from '../text';
+import {
+  compararCodigos,
+  compararNomes,
+  contemTexto,
+  formatarNomeLinha,
+  normalizar,
+} from '../text';
 
 describe('statusDaRota', () => {
   it('usa o pior status entre as linhas da rota', () => {
@@ -49,6 +55,20 @@ describe('texto', () => {
     expect(normalizar('Brás')).toBe('bras');
     expect(contemTexto('José Bonifácio', 'jose bon')).toBe(true);
     expect(contemTexto('Luz', '')).toBe(true);
+  });
+
+  it('ordena nomes em português e códigos de linha numericamente', () => {
+    expect(['Sé', 'Água Branca', 'brás'].sort(compararNomes)).toEqual([
+      'Água Branca',
+      'brás',
+      'Sé',
+    ]);
+    expect(['11', '2', '1', 'expresso'].sort(compararCodigos)).toEqual([
+      '1',
+      '2',
+      '11',
+      'expresso',
+    ]);
   });
 
   it('usa traço tipográfico no nome da linha', () => {

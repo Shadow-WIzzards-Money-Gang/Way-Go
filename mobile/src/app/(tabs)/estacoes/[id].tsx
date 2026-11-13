@@ -1,5 +1,12 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, ChevronRight, CircleDot, MapPin, MapPinOff, Shuffle } from 'lucide-react-native';
+import {
+  ChevronLeft,
+  ChevronRight,
+  CircleDot,
+  MapPin,
+  MapPinOff,
+  Shuffle,
+} from 'lucide-react-native';
 import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 import { AvisoBanner } from '@/components/AvisoBanner';
@@ -18,7 +25,7 @@ import { type CampoEstacao, usePlanejamento } from '@/store/planejamento';
 import { colors } from '@/theme/colors';
 import type { LinhaDaEstacao, StatusOperacional } from '@/types/api';
 import { ehStatusNormal, infoStatus } from '@/utils/status';
-import { formatarNomeLinha } from '@/utils/text';
+import { compararCodigos, formatarNomeLinha } from '@/utils/text';
 
 function LinhaDaEstacaoItem({
   linha,
@@ -67,9 +74,7 @@ export default function EstacaoScreen() {
     router.navigate('/');
   };
 
-  const linhas = [...(estacao?.linhas ?? [])].sort((a, b) =>
-    a.codigo.localeCompare(b.codigo, 'pt-BR', { numeric: true }),
-  );
+  const linhas = [...(estacao?.linhas ?? [])].sort((a, b) => compararCodigos(a.codigo, b.codigo));
   const statusDe = (linhaId: number) => index.linhaPorId.get(linhaId)?.status;
   const comProblema = linhas
     .map((l) => ({ linha: l, rede: index.linhaPorId.get(l.id) }))
