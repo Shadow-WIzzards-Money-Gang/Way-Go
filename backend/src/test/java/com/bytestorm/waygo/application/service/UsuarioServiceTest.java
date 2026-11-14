@@ -13,19 +13,34 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
+import com.bytestorm.waygo.application.dto.request.AlterarSenhaRequest;
 import com.bytestorm.waygo.application.dto.response.PaginaResponse;
 import com.bytestorm.waygo.application.dto.response.UsuarioResponse;
 import com.bytestorm.waygo.domain.entity.Usuario;
 import com.bytestorm.waygo.domain.enums.Role;
 import com.bytestorm.waygo.domain.exception.RecursoNaoEncontradoException;
 import com.bytestorm.waygo.domain.exception.RequisicaoInvalidaException;
+import com.bytestorm.waygo.domain.interfaces.SenhaHasher;
 import com.bytestorm.waygo.domain.interfaces.UsuarioRepository;
 import com.bytestorm.waygo.domain.valueobject.Pagina;
 
 class UsuarioServiceTest {
 
+	/** Hasher de teste: o "hash" é a senha com prefixo, o bastante para conferir a troca. */
+	private static final SenhaHasher HASHER = new SenhaHasher() {
+		@Override
+		public String gerarHash(String senha) {
+			return "hash:" + senha;
+		}
+
+		@Override
+		public boolean corresponde(String senha, String hash) {
+			return hash.equals(gerarHash(senha));
+		}
+	};
+
 	private final Usuarios usuarios = new Usuarios();
-	private final UsuarioService service = new UsuarioService(usuarios);
+	private final UsuarioService service = new UsuarioService(usuarios, HASHER);
 
 	private static class Usuarios implements UsuarioRepository {
 
@@ -38,6 +53,7 @@ class UsuarioServiceTest {
 
 		@Override
 		public Usuario salvar(Usuario usuario) {
+			todos.removeIf(u -> u.getId().equals(usuario.getId()));
 			todos.add(usuario);
 			return usuario;
 		}
@@ -101,6 +117,40 @@ class UsuarioServiceTest {
 		assertThat(eu.roles()).containsExactly("USUARIO");
 		assertThat(eu.criadoEm()).isEqualTo(ana.getCriadoEm());
 		assertThatThrownBy(() -> service.buscar(UUID.randomUUID()))
+				.isInstanceOf(RecursoNaoEncontradoException.class);
+	}
+
+	@Test
+	void atualizaSenhaQuandoASenhaAtualConfere() {
+		Usuario ana = usuarios.salvar(Usuario.criar("ana@waygo.test", "senhaAntiga1", HASHER,
+				LocalDateTime.of(2026, 1, 1, 10, 0)));
+
+		service.atualizarSenha(ana.getId(), new AlterarSenhaRequest("senhaAntiga1", "senhaNova123"));
+
+		Usuario salvo = usuarios.buscarPorId(ana.getId()).orElseThrow();
+		assertThat(salvo.verificarSenha("senhaNova123", HASHER)).isTrue();
+		assertThat(salvo.verificarSenha("senhaAntiga1", HASHER)).isFalse();
+	}
+
+	@Test
+	void recusaTrocaComSenhaAtualErradaOuNovaInvalida() {
+		Usuario ana = usuarios.salvar(Usuario.criar("ana@waygo.test", "senhaAntiga1", HASHER,
+				LocalDateTime.of(2026, 1, 1, 10, 0)));
+
+		assertThatThrownBy(() -> service.atualizarSenha(ana.getId(),
+				new AlterarSenhaRequest("errada123", "senhaNova123")))
+				.isInstanceOf(RequisicaoInvalidaException.class);
+		assertThatThrownBy(() -> service.atualizarSenha(ana.getId(),
+				new AlterarSenhaRequest("senhaAntiga1", "curta")))
+				.isInstanceOf(RequisicaoInvalidaException.class);
+		assertThat(usuarios.buscarPorId(ana.getId()).orElseThrow().verificarSenha("senhaAntiga1", HASHER))
+				.isTrue();
+	}
+
+	@Test
+	void atualizarSenhaDeUsuarioInexistenteFalha() {
+		assertThatThrownBy(() -> service.atualizarSenha(UUID.randomUUID(),
+				new AlterarSenhaRequest("senhaAntiga1", "senhaNova123")))
 				.isInstanceOf(RecursoNaoEncontradoException.class);
 	}
 

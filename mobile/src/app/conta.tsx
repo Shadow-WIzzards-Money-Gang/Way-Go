@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { CalendarDays, LogOut, Mail, ShieldCheck, UserRound } from 'lucide-react-native';
+import { CalendarDays, KeyRound, LogOut, Mail, ShieldCheck, UserRound } from 'lucide-react-native';
 import { Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -117,6 +117,12 @@ export default function ContaScreen() {
           </>
         )}
 
+        <Button
+          rotulo="Alterar senha"
+          variante="outline"
+          icone={KeyRound}
+          onPress={() => router.push('/alterar-senha')}
+        />
         <Button rotulo="Encerrar sessão" variante="danger" icone={LogOut} onPress={sair} />
       </ScrollView>
     </SafeAreaView>

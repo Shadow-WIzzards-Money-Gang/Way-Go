@@ -55,6 +55,13 @@ public class Usuario {
 		return outroEmail != null && email.equals(normalizarEmail(outroEmail));
 	}
 
+	public void atualizarSenha(String senhaAtual, String novaSenha, SenhaHasher hasher) {
+		if (!verificarSenha(senhaAtual, hasher)) {
+			throw new IllegalArgumentException("senha atual incorreta");
+		}
+		this.senhaHash = validarHash(gerarHash(novaSenha, hasher));
+	}
+
 	public void adicionarRole(Role role) {
 		roles.add(exigir(role, "role"));
 	}

@@ -145,7 +145,12 @@ export function useRegistro() {
   });
 }
 
-/** GET /usuarios/me: só roda com sessão. */
+/** POST /usuarios/eu/atualizar-senha: a sessão atual continua válida. */
+export function useAlterarSenha() {
+  return useMutation({ mutationFn: usuariosApi.atualizarSenha });
+}
+
+/** GET /usuarios/eu: só roda com sessão. */
 export function useUsuarioAtual() {
   const logado = useLogado();
   return useQuery({

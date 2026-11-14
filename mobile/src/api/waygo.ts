@@ -1,4 +1,5 @@
 import type {
+  AlterarSenhaRequest,
   EstacaoDetalhe,
   EstacaoRequest,
   EstacaoResumo,
@@ -67,7 +68,9 @@ export const authApi = {
 
 /** Endpoints que exigem token (o interceptor de client.ts envia o Authorization). */
 export const usuariosApi = {
-  eu: () => api.get<UsuarioAtual>('/usuarios/me').then((r) => r.data),
+  eu: () => api.get<UsuarioAtual>('/usuarios/eu').then((r) => r.data),
+  atualizarSenha: (dados: AlterarSenhaRequest) =>
+    api.post<void>('/usuarios/eu/atualizar-senha', dados).then(() => undefined),
   /** Só administradores. */
   listar: (pagina: number, tamanho = 20) =>
     api.get<Pagina<Usuario>>('/usuarios', { params: { pagina, tamanho } }).then((r) => r.data),

@@ -72,6 +72,10 @@ export default function RootLayout() {
             name="conta"
             options={{ presentation: 'modal', headerShown: true, title: 'Minha conta' }}
           />
+          <Stack.Screen
+            name="alterar-senha"
+            options={{ presentation: 'modal', headerShown: true, title: 'Alterar senha' }}
+          />
         </Stack>
       </ThemeProvider>
     </QueryClientProvider>

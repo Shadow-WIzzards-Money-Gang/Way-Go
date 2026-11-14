@@ -197,6 +197,11 @@ export interface LoginResponse {
 
 export type RegistroRequest = LoginRequest;
 
+export interface AlterarSenhaRequest {
+  senhaAtual: string;
+  novaSenha: string;
+}
+
 export interface RegistroResponse {
   id: string;
   email: string;
