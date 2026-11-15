@@ -21,6 +21,7 @@ import com.bytestorm.waygo.domain.enums.Role;
 import com.bytestorm.waygo.domain.exception.OperacaoNaoPermitidaException;
 import com.bytestorm.waygo.domain.exception.RecursoNaoEncontradoException;
 import com.bytestorm.waygo.domain.exception.RequisicaoInvalidaException;
+import com.bytestorm.waygo.domain.interfaces.EnviadorEmail;
 import com.bytestorm.waygo.domain.interfaces.SenhaHasher;
 import com.bytestorm.waygo.domain.interfaces.UsuarioRepository;
 import com.bytestorm.waygo.domain.valueobject.Pagina;
@@ -41,7 +42,18 @@ class UsuarioServiceTest {
 	};
 
 	private final Usuarios usuarios = new Usuarios();
-	private final UsuarioService service = new UsuarioService(usuarios, HASHER);
+	private final List<String> contasExcluidasNotificadas = new ArrayList<>();
+	private final UsuarioService service = new UsuarioService(usuarios, HASHER, new EnviadorEmail() {
+		@Override
+		public void enviarBoasVindas(String destinatario) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void enviarContaExcluida(String destinatario) {
+			contasExcluidasNotificadas.add(destinatario);
+		}
+	});
 
 	private static class Usuarios implements UsuarioRepository {
 
@@ -167,6 +179,7 @@ class UsuarioServiceTest {
 		service.excluirPropriaConta(ana.getId());
 
 		assertThat(usuarios.buscarPorId(ana.getId())).isEmpty();
+		assertThat(contasExcluidasNotificadas).containsExactly("ana@waygo.test");
 	}
 
 	@Test
@@ -179,6 +192,7 @@ class UsuarioServiceTest {
 		assertThatThrownBy(() -> service.excluirPropriaConta(moderador.getId()))
 				.isInstanceOf(OperacaoNaoPermitidaException.class);
 		assertThat(usuarios.todos).hasSize(2);
+		assertThat(contasExcluidasNotificadas).isEmpty();
 	}
 
 	@Test

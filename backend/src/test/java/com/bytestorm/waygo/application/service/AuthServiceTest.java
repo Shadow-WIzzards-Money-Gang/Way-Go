@@ -31,6 +31,7 @@ import com.bytestorm.waygo.domain.entity.Usuario;
 import com.bytestorm.waygo.domain.exception.CredenciaisInvalidasException;
 import com.bytestorm.waygo.domain.exception.EmailJaCadastradoException;
 import com.bytestorm.waygo.domain.exception.RequisicaoInvalidaException;
+import com.bytestorm.waygo.domain.interfaces.EnviadorEmail;
 import com.bytestorm.waygo.domain.interfaces.UsuarioRepository;
 import com.bytestorm.waygo.domain.valueobject.Pagina;
 import com.bytestorm.waygo.infrastructure.config.security.BCryptSenhaHasher;
@@ -91,6 +92,19 @@ class AuthServiceTest {
 		}
 	}
 
+	/** Guarda os destinatários das boas-vindas; outros e-mails não são esperados aqui. */
+	private record EmailsEmMemoria(List<String> boasVindas) implements EnviadorEmail {
+		@Override
+		public void enviarBoasVindas(String destinatario) {
+			boasVindas.add(destinatario);
+		}
+
+		@Override
+		public void enviarContaExcluida(String destinatario) {
+			throw new UnsupportedOperationException();
+		}
+	}
+
 	private static TokenService criarTokenService() {
 		TokenService tokenService = new TokenService();
 		ReflectionTestUtils.setField(tokenService, "SEGREDO", "segredo-de-teste-com-mais-de-32-caracteres");
@@ -102,7 +116,7 @@ class AuthServiceTest {
 	private AuthService criarAuthService(UsuarioRepository repo, Clock clock) {
 		DaoAuthenticationProvider provider = new DaoAuthenticationProvider(new UsuarioDetailsService(repo));
 		provider.setPasswordEncoder(passwordEncoder);
-		return new AuthService(repo, tokenService, new ProviderManager(provider), senhaHasher, emailsEnviados::add, clock);
+		return new AuthService(repo, tokenService, new ProviderManager(provider), senhaHasher, new EmailsEmMemoria(emailsEnviados), clock);
 	}
 
 	private RegistroResponse registrarAna() {

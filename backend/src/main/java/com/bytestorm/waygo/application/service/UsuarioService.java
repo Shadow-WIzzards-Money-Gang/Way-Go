@@ -12,6 +12,7 @@ import com.bytestorm.waygo.domain.entity.Usuario;
 import com.bytestorm.waygo.domain.exception.OperacaoNaoPermitidaException;
 import com.bytestorm.waygo.domain.exception.RecursoNaoEncontradoException;
 import com.bytestorm.waygo.domain.exception.RequisicaoInvalidaException;
+import com.bytestorm.waygo.domain.interfaces.EnviadorEmail;
 import com.bytestorm.waygo.domain.interfaces.SenhaHasher;
 import com.bytestorm.waygo.domain.interfaces.UsuarioRepository;
 
@@ -27,6 +28,7 @@ public class UsuarioService {
 
 	private final UsuarioRepository usuarioRepository;
 	private final SenhaHasher senhaHasher;
+	private final EnviadorEmail enviadorEmail;
 
 	public PaginaResponse<UsuarioResponse> listar(int pagina, int tamanho) {
 		if (pagina < 0) {
@@ -65,6 +67,7 @@ public class UsuarioService {
 					"Administradores e moderadores não podem excluir a própria conta");
 		}
 		usuarioRepository.excluir(id);
+		enviadorEmail.enviarContaExcluida(usuario.getEmail());
 	}
 
 }

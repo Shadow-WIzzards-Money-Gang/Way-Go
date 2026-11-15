@@ -25,23 +25,37 @@ import lombok.extern.slf4j.Slf4j;
 public class JavaMailEnviadorEmail implements EnviadorEmail {
 
 	static final String ASSUNTO_BOAS_VINDAS = "Bem-vindo(a) ao WayGo!";
+	static final String ASSUNTO_CONTA_EXCLUIDA = "Sua conta WayGo foi excluída";
 	private static final String TEMPLATE_BOAS_VINDAS = "templates/email/boas-vindas.html";
+	private static final String TEMPLATE_CONTA_EXCLUIDA = "templates/email/conta-excluida.html";
 
 	private final JavaMailSender mailSender;
 	private final EmailProperties propriedades;
 	private final String templateBoasVindas;
+	private final String templateContaExcluida;
 
 	public JavaMailEnviadorEmail(JavaMailSender mailSender, EmailProperties propriedades) {
 		this.mailSender = mailSender;
 		this.propriedades = propriedades;
 		this.templateBoasVindas = carregarTemplate(TEMPLATE_BOAS_VINDAS);
+		this.templateContaExcluida = carregarTemplate(TEMPLATE_CONTA_EXCLUIDA);
 	}
 
 	@Async
 	@Override
 	public void enviarBoasVindas(String destinatario) {
+		enviar(destinatario, ASSUNTO_BOAS_VINDAS, templateBoasVindas, "boas-vindas");
+	}
+
+	@Async
+	@Override
+	public void enviarContaExcluida(String destinatario) {
+		enviar(destinatario, ASSUNTO_CONTA_EXCLUIDA, templateContaExcluida, "conta excluída");
+	}
+
+	private void enviar(String destinatario, String assunto, String template, String tipo) {
 		if (!propriedades.habilitado()) {
-			log.info("Envio de e-mail desabilitado; boas-vindas para {} não enviado", destinatario);
+			log.info("Envio de e-mail desabilitado; e-mail de {} para {} não enviado", tipo, destinatario);
 			return;
 		}
 
@@ -50,12 +64,12 @@ public class JavaMailEnviadorEmail implements EnviadorEmail {
 			MimeMessageHelper helper = new MimeMessageHelper(mensagem, true, StandardCharsets.UTF_8.name());
 			helper.setFrom(propriedades.remetente(), propriedades.nomeRemetente());
 			helper.setTo(destinatario);
-			helper.setSubject(ASSUNTO_BOAS_VINDAS);
-			helper.setText(templateBoasVindas.replace("{{email}}", HtmlUtils.htmlEscape(destinatario)), true);
+			helper.setSubject(assunto);
+			helper.setText(template.replace("{{email}}", HtmlUtils.htmlEscape(destinatario)), true);
 			mailSender.send(mensagem);
-			log.info("E-mail de boas-vindas enviado para {}", destinatario);
+			log.info("E-mail de {} enviado para {}", tipo, destinatario);
 		} catch (MailException | MessagingException | IOException e) {
-			log.warn("Falha ao enviar e-mail de boas-vindas para {}: {}", destinatario, e.getMessage());
+			log.warn("Falha ao enviar e-mail de {} para {}: {}", tipo, destinatario, e.getMessage());
 		}
 	}
 

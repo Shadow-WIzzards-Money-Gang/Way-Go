@@ -54,6 +54,21 @@ class JavaMailEnviadorEmailTest {
 	}
 
 	@Test
+	void enviaConfirmacaoDeContaExcluida() throws Exception {
+		criar(true).enviarContaExcluida("ana@email.com");
+
+		ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
+		verify(mailSender).send(captor.capture());
+		MimeMessage mensagem = captor.getValue();
+		mensagem.saveChanges();
+
+		assertThat(mensagem.getSubject()).isEqualTo(JavaMailEnviadorEmail.ASSUNTO_CONTA_EXCLUIDA);
+		assertThat(mensagem.getRecipients(Message.RecipientType.TO))
+				.containsExactly(new InternetAddress("ana@email.com"));
+		assertThat(textoDe(mensagem)).contains("ana@email.com", "excluída").doesNotContain("{{email}}");
+	}
+
+	@Test
 	void desabilitadoNaoEnvia() {
 		new JavaMailEnviadorEmail(mailSender, new EmailProperties(false, "waygo@gmail.com", "WayGo"))
 				.enviarBoasVindas("ana@email.com");
