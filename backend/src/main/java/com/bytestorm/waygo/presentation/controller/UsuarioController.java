@@ -3,6 +3,7 @@ package com.bytestorm.waygo.presentation.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -49,6 +50,14 @@ public class UsuarioController {
 			@Valid @RequestBody AlterarSenhaRequest request) {
 		UsuarioAutenticado usuario = (UsuarioAutenticado) authentication.getPrincipal();
 		usuarioService.atualizarSenha(usuario.getUsuario().getId(), request);
+		return ResponseEntity.noContent().build();
+	}
+
+	@DeleteMapping("/eu")
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<Void> excluirConta(Authentication authentication) {
+		UsuarioAutenticado usuario = (UsuarioAutenticado) authentication.getPrincipal();
+		usuarioService.excluirPropriaConta(usuario.getUsuario().getId());
 		return ResponseEntity.noContent().build();
 	}
 

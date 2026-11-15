@@ -81,6 +81,11 @@ public class Usuario {
 		return possuiRole(Role.ADMINISTRADOR);
 	}
 
+	/** Só passageiros excluem a própria conta: administradores e moderadores não. */
+	public boolean podeExcluirPropriaConta() {
+		return !possuiRole(Role.ADMINISTRADOR) && !possuiRole(Role.MODERADOR);
+	}
+
 	public Set<Role> getRoles() {
 		return Set.copyOf(roles);
 	}

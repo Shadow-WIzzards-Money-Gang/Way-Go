@@ -9,6 +9,7 @@ import com.bytestorm.waygo.application.dto.request.AlterarSenhaRequest;
 import com.bytestorm.waygo.application.dto.response.PaginaResponse;
 import com.bytestorm.waygo.application.dto.response.UsuarioResponse;
 import com.bytestorm.waygo.domain.entity.Usuario;
+import com.bytestorm.waygo.domain.exception.OperacaoNaoPermitidaException;
 import com.bytestorm.waygo.domain.exception.RecursoNaoEncontradoException;
 import com.bytestorm.waygo.domain.exception.RequisicaoInvalidaException;
 import com.bytestorm.waygo.domain.interfaces.SenhaHasher;
@@ -53,6 +54,17 @@ public class UsuarioService {
 			throw new RequisicaoInvalidaException(e.getMessage());
 		}
 		usuarioRepository.salvar(usuario);
+	}
+
+	@Transactional
+	public void excluirPropriaConta(UUID id) {
+		Usuario usuario = usuarioRepository.buscarPorId(id)
+				.orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
+		if (!usuario.podeExcluirPropriaConta()) {
+			throw new OperacaoNaoPermitidaException(
+					"Administradores e moderadores não podem excluir a própria conta");
+		}
+		usuarioRepository.excluir(id);
 	}
 
 }

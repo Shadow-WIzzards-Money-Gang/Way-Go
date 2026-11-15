@@ -71,6 +71,7 @@ export const usuariosApi = {
   eu: () => api.get<UsuarioAtual>('/usuarios/eu').then((r) => r.data),
   atualizarSenha: (dados: AlterarSenhaRequest) =>
     api.post<void>('/usuarios/eu/atualizar-senha', dados).then(() => undefined),
+  excluirConta: () => api.delete<void>('/usuarios/eu').then(() => undefined),
   /** Só administradores. */
   listar: (pagina: number, tamanho = 20) =>
     api.get<Pagina<Usuario>>('/usuarios', { params: { pagina, tamanho } }).then((r) => r.data),

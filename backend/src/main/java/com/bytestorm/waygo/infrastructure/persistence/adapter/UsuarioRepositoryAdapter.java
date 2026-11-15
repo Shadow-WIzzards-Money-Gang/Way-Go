@@ -67,6 +67,13 @@ public class UsuarioRepositoryAdapter implements UsuarioRepository {
 				resultado.getTotalElements());
 	}
 
+	/** As rotas salvas e os agendamentos do usuário saem junto (ON DELETE CASCADE no banco). */
+	@Override
+	@Transactional
+	public void excluir(UUID id) {
+		jpaRepository.deleteById(id);
+	}
+
 	private Set<RoleEntity> buscarRoles(Set<Role> roles) {
 		Set<RoleEntity> encontradas = Set.copyOf(roleJpaRepository.findByNomeIn(roles));
 		if (encontradas.size() != roles.size()) {

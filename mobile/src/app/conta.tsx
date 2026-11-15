@@ -1,9 +1,19 @@
 import { router } from 'expo-router';
-import { CalendarDays, KeyRound, LogOut, Mail, ShieldCheck, UserRound } from 'lucide-react-native';
+import {
+  CalendarDays,
+  KeyRound,
+  LogOut,
+  Mail,
+  ShieldCheck,
+  Trash2,
+  UserRound,
+} from 'lucide-react-native';
+import { useState } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/errors';
+import { ConfirmarExclusaoConta } from '@/components/ConfirmarExclusaoConta';
 import { ConviteLogin } from '@/components/ConviteLogin';
 import { AvisoBanner } from '@/components/AvisoBanner';
 import { Avatar } from '@/components/ui/Avatar';
@@ -55,6 +65,7 @@ function LinhaInfo({
 export default function ContaScreen() {
   const emailDaSessao = useEmailDaSessao();
   const { data: usuario, isPending, error, refetch } = useUsuarioAtual();
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
 
   const sair = () =>
     Alert.alert('Encerrar sessão?', 'Suas rotas continuam salvas na conta.', [
@@ -68,6 +79,13 @@ export default function ContaScreen() {
         },
       },
     ]);
+
+  const aoExcluirConta = () => {
+    setConfirmandoExclusao(false);
+    router.back();
+    void encerrarSessao();
+    Alert.alert('Conta excluída', 'Sua conta e seus dados foram apagados.');
+  };
 
   if (!emailDaSessao) {
     return (
@@ -87,6 +105,8 @@ export default function ContaScreen() {
   const email = usuario?.email ?? emailDaSessao;
   const perfis = usuario?.roles.map((r) => NOME_PERFIL[r] ?? r).join(', ');
   const membroDesde = formatarData(usuario?.criadoEm);
+  // Só passageiros excluem a própria conta (o backend recusa administradores e moderadores).
+  const podeExcluir = !!usuario && usuario.roles.every((r) => r === 'USUARIO');
 
   return (
     <SafeAreaView edges={['bottom']} className="flex-1 bg-background">
@@ -124,7 +144,21 @@ export default function ContaScreen() {
           onPress={() => router.push('/alterar-senha')}
         />
         <Button rotulo="Encerrar sessão" variante="danger" icone={LogOut} onPress={sair} />
+        {podeExcluir && (
+          <Button
+            rotulo="Excluir conta"
+            variante="ghost"
+            icone={Trash2}
+            onPress={() => setConfirmandoExclusao(true)}
+            accessibilityHint="Apaga a conta e os dados salvos de forma permanente"
+          />
+        )}
       </ScrollView>
+      <ConfirmarExclusaoConta
+        visivel={confirmandoExclusao}
+        aoFechar={() => setConfirmandoExclusao(false)}
+        aoExcluir={aoExcluirConta}
+      />
     </SafeAreaView>
   );
 }

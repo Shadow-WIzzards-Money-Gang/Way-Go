@@ -18,6 +18,7 @@ import com.bytestorm.waygo.application.dto.response.PaginaResponse;
 import com.bytestorm.waygo.application.dto.response.UsuarioResponse;
 import com.bytestorm.waygo.domain.entity.Usuario;
 import com.bytestorm.waygo.domain.enums.Role;
+import com.bytestorm.waygo.domain.exception.OperacaoNaoPermitidaException;
 import com.bytestorm.waygo.domain.exception.RecursoNaoEncontradoException;
 import com.bytestorm.waygo.domain.exception.RequisicaoInvalidaException;
 import com.bytestorm.waygo.domain.interfaces.SenhaHasher;
@@ -81,6 +82,11 @@ class UsuarioServiceTest {
 			int inicio = Math.min(pagina * tamanho, ordenados.size());
 			int fim = Math.min(inicio + tamanho, ordenados.size());
 			return new Pagina<>(ordenados.subList(inicio, fim), pagina, tamanho, ordenados.size());
+		}
+
+		@Override
+		public void excluir(UUID id) {
+			todos.removeIf(u -> u.getId().equals(id));
 		}
 
 	}
@@ -151,6 +157,33 @@ class UsuarioServiceTest {
 	void atualizarSenhaDeUsuarioInexistenteFalha() {
 		assertThatThrownBy(() -> service.atualizarSenha(UUID.randomUUID(),
 				new AlterarSenhaRequest("senhaAntiga1", "senhaNova123")))
+				.isInstanceOf(RecursoNaoEncontradoException.class);
+	}
+
+	@Test
+	void passageiroExcluiAPropriaConta() {
+		Usuario ana = usuarios.criar("ana@waygo.test", 1, Role.USUARIO);
+
+		service.excluirPropriaConta(ana.getId());
+
+		assertThat(usuarios.buscarPorId(ana.getId())).isEmpty();
+	}
+
+	@Test
+	void administradorEModeradorNaoExcluemAPropriaConta() {
+		Usuario admin = usuarios.criar("admin@waygo.test", 1, Role.USUARIO, Role.ADMINISTRADOR);
+		Usuario moderador = usuarios.criar("mod@waygo.test", 2, Role.MODERADOR);
+
+		assertThatThrownBy(() -> service.excluirPropriaConta(admin.getId()))
+				.isInstanceOf(OperacaoNaoPermitidaException.class);
+		assertThatThrownBy(() -> service.excluirPropriaConta(moderador.getId()))
+				.isInstanceOf(OperacaoNaoPermitidaException.class);
+		assertThat(usuarios.todos).hasSize(2);
+	}
+
+	@Test
+	void excluirContaInexistenteFalha() {
+		assertThatThrownBy(() -> service.excluirPropriaConta(UUID.randomUUID()))
 				.isInstanceOf(RecursoNaoEncontradoException.class);
 	}
 

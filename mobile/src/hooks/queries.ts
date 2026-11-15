@@ -150,6 +150,11 @@ export function useAlterarSenha() {
   return useMutation({ mutationFn: usuariosApi.atualizarSenha });
 }
 
+/** DELETE /usuarios/eu: só passageiros; quem chama encerra a sessão depois. */
+export function useExcluirConta() {
+  return useMutation({ mutationFn: usuariosApi.excluirConta });
+}
+
 /** GET /usuarios/eu: só roda com sessão. */
 export function useUsuarioAtual() {
   const logado = useLogado();

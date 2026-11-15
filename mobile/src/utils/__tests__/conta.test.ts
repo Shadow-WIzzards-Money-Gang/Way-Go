@@ -4,7 +4,7 @@ import type { LinhaResumo, Rota, TrechoRota } from '@/types/api';
 
 import { formatarData } from '../format';
 import { linhasDaRota } from '../rota';
-import { ehEmailValido, inicialDoEmail } from '../text';
+import { confirmacaoExclusaoValida, ehEmailValido, inicialDoEmail } from '../text';
 
 describe('inicialDoEmail', () => {
   it('usa a primeira letra em maiúscula', () => {
@@ -62,5 +62,18 @@ describe('linhasDaRota', () => {
 
   it('retorna vazio sem rota', () => {
     expect(linhasDaRota(undefined)).toEqual([]);
+  });
+});
+
+describe('confirmacaoExclusaoValida', () => {
+  it('aceita a frase sem diferenciar maiúsculas e espaços', () => {
+    expect(confirmacaoExclusaoValida('deletar conta')).toBe(true);
+    expect(confirmacaoExclusaoValida('  Deletar   CONTA ')).toBe(true);
+  });
+
+  it('recusa qualquer outro texto', () => {
+    expect(confirmacaoExclusaoValida('')).toBe(false);
+    expect(confirmacaoExclusaoValida('deletar')).toBe(false);
+    expect(confirmacaoExclusaoValida('excluir conta')).toBe(false);
   });
 });

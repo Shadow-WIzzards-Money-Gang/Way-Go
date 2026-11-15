@@ -109,6 +109,19 @@ class UsuarioTest {
 	}
 
 	@Test
+	void soPassageiroPodeExcluirAPropriaConta() {
+		Usuario usuario = usuario();
+		assertThat(usuario.podeExcluirPropriaConta()).isTrue();
+
+		usuario.adicionarRole(Role.MODERADOR);
+		assertThat(usuario.podeExcluirPropriaConta()).isFalse();
+
+		usuario.removerRole(Role.MODERADOR);
+		usuario.adicionarRole(Role.ADMINISTRADOR);
+		assertThat(usuario.podeExcluirPropriaConta()).isFalse();
+	}
+
+	@Test
 	void roleDeAceitaNomeSemDiferenciarMaiusculas() {
 		assertThat(Role.de(" administrador ")).isEqualTo(Role.ADMINISTRADOR);
 		assertThatThrownBy(() -> Role.de("ADMIN")).isInstanceOf(IllegalArgumentException.class);

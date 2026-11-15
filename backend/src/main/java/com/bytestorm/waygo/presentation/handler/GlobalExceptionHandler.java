@@ -19,6 +19,7 @@ import com.bytestorm.waygo.application.dto.response.ErroResponse;
 import com.bytestorm.waygo.domain.exception.ConflitoException;
 import com.bytestorm.waygo.domain.exception.CredenciaisInvalidasException;
 import com.bytestorm.waygo.domain.exception.EmailJaCadastradoException;
+import com.bytestorm.waygo.domain.exception.OperacaoNaoPermitidaException;
 import com.bytestorm.waygo.domain.exception.RecursoNaoEncontradoException;
 import com.bytestorm.waygo.domain.exception.RequisicaoInvalidaException;
 import com.bytestorm.waygo.domain.exception.RotaNaoEncontradaException;
@@ -55,6 +56,11 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(ConflitoException.class)
 	public ResponseEntity<ErroResponse> tratarConflito(ConflitoException ex) {
 		return erro(HttpStatus.CONFLICT, ex.getMessage());
+	}
+
+	@ExceptionHandler(OperacaoNaoPermitidaException.class)
+	public ResponseEntity<ErroResponse> tratarOperacaoNaoPermitida(OperacaoNaoPermitidaException ex) {
+		return erro(HttpStatus.FORBIDDEN, ex.getMessage());
 	}
 
 	@ExceptionHandler(AccessDeniedException.class)

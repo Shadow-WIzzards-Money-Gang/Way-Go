@@ -18,4 +18,6 @@ public interface UsuarioRepository {
 
 	Pagina<Usuario> listarPaginado(int pagina, int tamanho);
 
+	void excluir(UUID id);
+
 }

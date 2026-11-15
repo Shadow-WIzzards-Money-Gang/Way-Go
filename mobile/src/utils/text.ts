@@ -35,3 +35,11 @@ export function ehEmailValido(email: string): boolean {
 export function formatarNomeLinha(nome: string): string {
   return nome.replace(/\s+-\s+/, ' – ');
 }
+
+/** Frase que o usuário digita para confirmar a exclusão da conta. */
+export const FRASE_EXCLUIR_CONTA = 'deletar conta';
+
+/** Aceita a frase sem diferenciar maiúsculas, acentos ou espaços nas pontas. */
+export function confirmacaoExclusaoValida(texto: string): boolean {
+  return normalizar(texto).replace(/\s+/g, ' ') === FRASE_EXCLUIR_CONTA;
+}

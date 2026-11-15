@@ -84,6 +84,11 @@ class AuthServiceTest {
 		public Pagina<Usuario> listarPaginado(int pagina, int tamanho) {
 			throw new UnsupportedOperationException();
 		}
+
+		@Override
+		public void excluir(UUID id) {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	private static TokenService criarTokenService() {
