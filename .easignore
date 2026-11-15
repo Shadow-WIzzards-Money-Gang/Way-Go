@@ -1,0 +1,53 @@
+# Arquivos que NÃO sobem para o build do EAS (app mobile).
+# O EAS envia o repositório a partir da raiz e, quando este arquivo existe,
+# usa só ele no lugar de todos os .gitignore.
+#
+# Diferença proposital em relação ao git: mobile/.env sobe, porque o
+# mobile/app.config.js lê dele a GOOGLE_MAPS_API_KEY (que não vai para o git).
+
+# Fora do app: não é necessário no build
+/backend/
+/docs/
+/.env
+/.env.*
+!/.env.example
+docker-compose.yml
+
+# Dependências e gerados
+node_modules/
+.expo/
+dist/
+web-build/
+build/
+.gradle/
+*.tsbuildinfo
+mobile/expo-env.d.ts
+.metro-health-check*
+
+# Pastas nativas (geradas no build via prebuild)
+/mobile/ios
+/mobile/android
+
+# Credenciais e chaves
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.pem
+*.mobileprovision
+google-services.json
+
+# Env locais do mobile (o mobile/.env sobe de propósito)
+mobile/.env*.local
+
+# Diversos
+*.apk
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.DS_Store
+.idea/
+.vscode/
+*.orig.*
