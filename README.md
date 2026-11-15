@@ -127,6 +127,9 @@ Mais detalhes do app (variáveis, emulador, backend hospedado e problemas comuns
 | `JWT_SEGREDO` | `segredo` | Segredo de assinatura dos tokens. **Troque em produção** |
 | `JWT_EXPIRACAO_MINUTOS` | `60` | Validade do token |
 | `CORS_ORIGENS_PERMITIDAS` | `*` | Origens liberadas para o app web |
+| `EMAIL_HABILITADO` | `false` | Envia o e-mail de boas-vindas no cadastro |
+| `MAIL_USERNAME` / `MAIL_PASSWORD` | *(vazio)* | Conta SMTP. No Gmail, use uma [senha de app](https://myaccount.google.com/apppasswords) |
+| `MAIL_HOST` / `MAIL_PORT` | `smtp.gmail.com` / `587` | Servidor SMTP |
 
 **App (`mobile/.env`)**, veja [mobile/.env.example](mobile/.env.example). Com `EXPO_PUBLIC_API_HOST` vazio, o app usa automaticamente o IP da máquina que roda o Metro.
 

@@ -8,7 +8,9 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,6 +46,7 @@ class AuthServiceTest {
 	private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 	private final BCryptSenhaHasher senhaHasher = new BCryptSenhaHasher(passwordEncoder);
 	private final RepositorioEmMemoria repositorio = new RepositorioEmMemoria();
+	private final List<String> emailsEnviados = new ArrayList<>();
 	private final TokenService tokenService = criarTokenService();
 	private final AuthService authService = criarAuthService(repositorio, Clock.system(ZoneOffset.UTC));
 
@@ -94,7 +97,7 @@ class AuthServiceTest {
 	private AuthService criarAuthService(UsuarioRepository repo, Clock clock) {
 		DaoAuthenticationProvider provider = new DaoAuthenticationProvider(new UsuarioDetailsService(repo));
 		provider.setPasswordEncoder(passwordEncoder);
-		return new AuthService(repo, tokenService, new ProviderManager(provider), senhaHasher, clock);
+		return new AuthService(repo, tokenService, new ProviderManager(provider), senhaHasher, emailsEnviados::add, clock);
 	}
 
 	private RegistroResponse registrarAna() {
@@ -143,6 +146,30 @@ class AuthServiceTest {
 		assertThatThrownBy(() -> authService.registrar(new RegistroRequest("ana@email", "senhaForte123")))
 				.isInstanceOf(RequisicaoInvalidaException.class);
 		assertThat(repositorio.usuarios).isEmpty();
+		assertThat(emailsEnviados).isEmpty();
+	}
+
+	// --- e-mail de boas-vindas ---
+
+	@Test
+	void registrarEnviaBoasVindasParaOEmailNormalizado() {
+		authService.registrar(new RegistroRequest(" Ana@Email.com ", "senhaForte123"));
+
+		assertThat(emailsEnviados).containsExactly("ana@email.com");
+	}
+
+	@Test
+	void registrarNaoEnviaBoasVindasQuandoEmailJaCadastrado() {
+		registrarAna();
+		emailsEnviados.clear();
+
+		assertThatThrownBy(() -> authService.registrar(new RegistroRequest("ana@email.com", "outraSenha123")))
+				.isInstanceOf(EmailJaCadastradoException.class);
+		repositorio.usuarios.clear();
+		repositorio.violarIndiceUnicoNoProximoSalvar = true;
+		assertThatThrownBy(this::registrarAna).isInstanceOf(EmailJaCadastradoException.class);
+
+		assertThat(emailsEnviados).isEmpty();
 	}
 
 	// --- login ---

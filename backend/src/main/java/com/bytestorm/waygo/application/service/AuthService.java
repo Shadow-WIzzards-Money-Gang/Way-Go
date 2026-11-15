@@ -18,6 +18,7 @@ import com.bytestorm.waygo.domain.entity.Usuario;
 import com.bytestorm.waygo.domain.exception.CredenciaisInvalidasException;
 import com.bytestorm.waygo.domain.exception.EmailJaCadastradoException;
 import com.bytestorm.waygo.domain.exception.RequisicaoInvalidaException;
+import com.bytestorm.waygo.domain.interfaces.EnviadorEmail;
 import com.bytestorm.waygo.domain.interfaces.SenhaHasher;
 import com.bytestorm.waygo.domain.interfaces.TokenProvider;
 import com.bytestorm.waygo.domain.interfaces.UsuarioRepository;
@@ -31,14 +32,17 @@ public class AuthService {
     private final TokenProvider tokenProvider;
     private final AuthenticationManager authenticationManager;
     private final SenhaHasher senhaHasher;
+    private final EnviadorEmail enviadorEmail;
     private final Clock clock;
 
     public AuthService(UsuarioRepository usuarioRepository, TokenProvider tokenProvider,
-            AuthenticationManager authenticationManager, SenhaHasher senhaHasher, Clock clock) {
+            AuthenticationManager authenticationManager, SenhaHasher senhaHasher,
+            EnviadorEmail enviadorEmail, Clock clock) {
         this.usuarioRepository = usuarioRepository;
         this.tokenProvider = tokenProvider;
         this.authenticationManager = authenticationManager;
         this.senhaHasher = senhaHasher;
+        this.enviadorEmail = enviadorEmail;
         this.clock = clock;
     }
 
@@ -55,11 +59,15 @@ public class AuthService {
 
         Usuario usuario = criarUsuario(request.email(), request.senha());
 
+        Usuario salvo;
         try {
-            return RegistroResponse.de(usuarioRepository.salvar(usuario));
+            salvo = usuarioRepository.salvar(usuario);
         } catch (DataIntegrityViolationException e) {
             throw new EmailJaCadastradoException();
         }
+
+        enviadorEmail.enviarBoasVindas(salvo.getEmail());
+        return RegistroResponse.de(salvo);
     }
 
     private Usuario criarUsuario(String email, String senha) {
