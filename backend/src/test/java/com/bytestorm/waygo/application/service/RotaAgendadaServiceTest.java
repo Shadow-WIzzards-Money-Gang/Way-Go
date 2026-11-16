@@ -78,6 +78,11 @@ class RotaAgendadaServiceTest {
 		}
 
 		@Override
+		public List<RotaSalva> listarTodas() {
+			return List.copyOf(rotas.values());
+		}
+
+		@Override
 		public void excluir(Long id) {
 			rotas.remove(id);
 		}

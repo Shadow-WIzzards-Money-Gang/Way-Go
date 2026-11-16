@@ -9,11 +9,13 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bytestorm.waygo.application.cache.GrafoRedeCache;
 import com.bytestorm.waygo.application.cache.StatusLinhasCache;
+import com.bytestorm.waygo.application.event.StatusLinhaAlteradoEvent;
 import com.bytestorm.waygo.application.dto.request.LinhaAtualizacaoRequest;
 import com.bytestorm.waygo.application.dto.request.LinhaRequest;
 import com.bytestorm.waygo.application.dto.request.OrdemEstacoesRequest;
@@ -24,6 +26,7 @@ import com.bytestorm.waygo.application.dto.response.LinhaStatusResponse;
 import com.bytestorm.waygo.domain.entity.LinhaEstacao;
 import com.bytestorm.waygo.domain.entity.LinhaStatus;
 import com.bytestorm.waygo.domain.entity.LinhaTransporte;
+import com.bytestorm.waygo.domain.enums.StatusOperacional;
 import com.bytestorm.waygo.domain.exception.ConflitoException;
 import com.bytestorm.waygo.domain.exception.RecursoNaoEncontradoException;
 import com.bytestorm.waygo.domain.exception.RequisicaoInvalidaException;
@@ -45,6 +48,7 @@ public class AdminLinhaService {
 	private final GrafoRedeCache grafoCache;
 	private final StatusLinhasCache statusCache;
 	private final Clock clock;
+	private final ApplicationEventPublisher eventos;
 
 	public LinhaResumoResponse criar(LinhaRequest request) {
 		if (linhaRepository.existePorCodigo(request.codigo())) {
@@ -110,13 +114,17 @@ public class AdminLinhaService {
 		return linhaService.listarEstacoes(id);
 	}
 
-	/** Status manual: vale como uma mudança da API; a próxima mudança da API externa o substitui. */
 	public LinhaStatusResponse alterarStatus(Long id, StatusLinhaRequest request) {
 		buscar(id);
 		LinhaStatus status = validando(() -> LinhaStatus.registrarPeloAdministrador(id, request.status(),
 				request.descricao(), LocalDateTime.now(clock)));
+		StatusOperacional anterior = statusCache.statusAtuais().get(id);
 		LinhaStatus salvo = linhaStatusRepository.salvar(status);
 		statusCache.registrar(id, salvo.getStatus());
+		if (salvo.mudouEmRelacaoA(anterior)) {
+			eventos.publishEvent(new StatusLinhaAlteradoEvent(id, salvo.getId(), anterior, salvo.getStatus(),
+					salvo.getDescricao()));
+		}
 		return LinhaStatusResponse.de(salvo);
 	}
 

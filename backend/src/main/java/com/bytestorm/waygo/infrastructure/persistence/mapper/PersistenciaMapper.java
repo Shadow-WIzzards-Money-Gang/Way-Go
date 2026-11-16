@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 
 import com.bytestorm.waygo.domain.entity.Baldeacao;
 import com.bytestorm.waygo.domain.entity.ConexaoEstacao;
+import com.bytestorm.waygo.domain.entity.DispositivoUsuario;
+import com.bytestorm.waygo.domain.entity.Notificacao;
 import com.bytestorm.waygo.domain.entity.Estacao;
 import com.bytestorm.waygo.domain.entity.LinhaEstacao;
 import com.bytestorm.waygo.domain.entity.LinhaStatus;
@@ -17,6 +19,8 @@ import com.bytestorm.waygo.domain.entity.Usuario;
 import com.bytestorm.waygo.domain.valueobject.Coordenada;
 import com.bytestorm.waygo.infrastructure.persistence.entity.BaldeacaoEntity;
 import com.bytestorm.waygo.infrastructure.persistence.entity.ConexaoEstacaoEntity;
+import com.bytestorm.waygo.infrastructure.persistence.entity.DispositivoUsuarioEntity;
+import com.bytestorm.waygo.infrastructure.persistence.entity.NotificacaoEntity;
 import com.bytestorm.waygo.infrastructure.persistence.entity.EstacaoEntity;
 import com.bytestorm.waygo.infrastructure.persistence.entity.LinhaEstacaoEntity;
 import com.bytestorm.waygo.infrastructure.persistence.entity.LinhaStatusEntity;
@@ -112,6 +116,33 @@ public final class PersistenciaMapper {
 		return new RotaAgendadaEntity(rotaAgendada.getId(), rotaAgendada.getIdRotaSalva(),
 				rotaAgendada.getHorarioPartidaMinutos(), rotaAgendada.getAntecedenciaMinutos(), rotaAgendada.isAtiva(),
 				rotaAgendada.getCriadoEm(), new HashSet<>(rotaAgendada.getDiasSemana()));
+	}
+
+	public static DispositivoUsuario paraDominio(DispositivoUsuarioEntity entity) {
+		return DispositivoUsuario.reconstruir(entity.getId(), entity.getIdUsuario(), entity.getTokenFcm(),
+				entity.getPlataforma(), entity.isAlertasStatus(), entity.isAtivo(), entity.getCriadoEm(),
+				entity.getAtualizadoEm());
+	}
+
+	public static DispositivoUsuarioEntity paraEntity(DispositivoUsuario dispositivo) {
+		return new DispositivoUsuarioEntity(dispositivo.getId(), dispositivo.getIdUsuario(), dispositivo.getTokenFcm(),
+				dispositivo.getPlataforma(), dispositivo.isAlertasStatus(), dispositivo.isAtivo(),
+				dispositivo.getCriadoEm(), dispositivo.getAtualizadoEm());
+	}
+
+	public static Notificacao paraDominio(NotificacaoEntity entity) {
+		return Notificacao.reconstruir(entity.getId(), entity.getIdUsuario(), entity.getTipo(), entity.getChave(),
+				entity.getTitulo(), entity.getCorpo(), entity.getDados(), entity.getStatus(), entity.getTentativas(),
+				entity.getProximaTentativaEm(), entity.getExpiraEm(), entity.getUltimoErro(), entity.getCriadoEm(),
+				entity.getEnviadaEm());
+	}
+
+	public static NotificacaoEntity paraEntity(Notificacao notificacao) {
+		return new NotificacaoEntity(notificacao.getId(), notificacao.getIdUsuario(), notificacao.getTipo(),
+				notificacao.getChave(), notificacao.getTitulo(), notificacao.getCorpo(), notificacao.getDados(),
+				notificacao.getStatus(), notificacao.getTentativas(), notificacao.getProximaTentativaEm(),
+				notificacao.getExpiraEm(), notificacao.getUltimoErro(), notificacao.getCriadoEm(),
+				notificacao.getEnviadaEm());
 	}
 
 	public static TokenRecuperacaoSenha paraDominio(TokenRecuperacaoSenhaEntity entity) {

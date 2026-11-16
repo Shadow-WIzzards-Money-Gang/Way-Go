@@ -6,10 +6,12 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import com.bytestorm.waygo.application.event.StatusLinhaAlteradoEvent;
 import com.bytestorm.waygo.domain.entity.LinhaStatus;
 import com.bytestorm.waygo.domain.entity.LinhaTransporte;
 import com.bytestorm.waygo.domain.enums.OrigemStatus;
@@ -24,14 +26,41 @@ class AtualizacaoStatusLinhaServiceTest {
 	private static final LocalDateTime AGORA_LOCAL = LocalDateTime.ofInstant(AGORA, ZoneOffset.UTC);
 
 	private final RedeEmMemoria rede = new RedeEmMemoria();
+	private final List<Object> eventos = new ArrayList<>();
 	private final Long linha = rede.linhas.salvar(
 			LinhaTransporte.criar("Linha 1-Azul", "1", "#0455A1", "Metrô", TipoTransporte.METRO)).getId();
 
 	private int atualizarCom(StatusOperacional statusDaApi) {
 		Clock clock = Clock.fixed(AGORA, ZoneOffset.UTC);
 		List<StatusLinhaExterno> api = List.of(new StatusLinhaExterno("1", statusDaApi, null));
-		return new AtualizacaoStatusLinhaService(() -> api, rede.status, rede.statusCache(clock), clock)
+		return new AtualizacaoStatusLinhaService(() -> api, rede.status, rede.statusCache(clock), clock, eventos::add)
 				.atualizar();
+	}
+
+	@Test
+	void publicaEventoComOStatusAnteriorENovoQuandoMuda() {
+		rede.status.salvar(LinhaStatus.registrarPeloAdministrador(linha, StatusOperacional.NORMAL, null,
+				AGORA_LOCAL.minusMinutes(5)));
+
+		atualizarCom(StatusOperacional.PARALISADA);
+
+		assertThat(eventos).singleElement().isInstanceOfSatisfying(StatusLinhaAlteradoEvent.class, evento -> {
+			assertThat(evento.linhaId()).isEqualTo(linha);
+			assertThat(evento.anterior()).isEqualTo(StatusOperacional.NORMAL);
+			assertThat(evento.novo()).isEqualTo(StatusOperacional.PARALISADA);
+			assertThat(evento.idLinhaStatus())
+					.isEqualTo(rede.status.buscarAtualPorLinha(linha).orElseThrow().getId());
+		});
+	}
+
+	@Test
+	void naoPublicaEventoQuandoOStatusNaoMuda() {
+		rede.status.salvar(LinhaStatus.registrarPeloAdministrador(linha, StatusOperacional.NORMAL, null,
+				AGORA_LOCAL.minusMinutes(5)));
+
+		atualizarCom(StatusOperacional.NORMAL);
+
+		assertThat(eventos).isEmpty();
 	}
 
 	@Test

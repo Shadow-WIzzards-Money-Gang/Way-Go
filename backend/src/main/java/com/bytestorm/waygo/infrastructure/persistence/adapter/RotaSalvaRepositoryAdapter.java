@@ -43,6 +43,11 @@ public class RotaSalvaRepositoryAdapter implements RotaSalvaRepository {
 				.toList();
 	}
 
+	@Override
+	public List<RotaSalva> listarTodas() {
+		return jpaRepository.findAll().stream().map(PersistenciaMapper::paraDominio).toList();
+	}
+
 	// Os agendamentos e seus dias são removidos pelo ON DELETE CASCADE da V6.
 	@Override
 	@Transactional

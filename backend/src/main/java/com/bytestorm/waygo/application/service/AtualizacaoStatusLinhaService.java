@@ -5,9 +5,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import com.bytestorm.waygo.application.cache.StatusLinhasCache;
+import com.bytestorm.waygo.application.event.StatusLinhaAlteradoEvent;
 import com.bytestorm.waygo.domain.entity.LinhaStatus;
 import com.bytestorm.waygo.domain.enums.StatusOperacional;
 import com.bytestorm.waygo.domain.interfaces.FonteStatusLinhas;
@@ -26,6 +28,7 @@ public class AtualizacaoStatusLinhaService {
 	private final LinhaStatusRepository linhaStatusRepository;
 	private final StatusLinhasCache cache;
 	private final Clock clock;
+	private final ApplicationEventPublisher eventos;
 
 	public int atualizar() {
 		List<StatusLinhaExterno> statusExternos = fonteStatusLinhas.buscarStatusAtuais();
@@ -45,9 +48,11 @@ public class AtualizacaoStatusLinhaService {
 				continue;
 			}
 
-			linhaStatusRepository.salvar(
+			LinhaStatus salvo = linhaStatusRepository.salvar(
 					LinhaStatus.registrarPelaApi(linhaId.get(), externo.status(), externo.descricao(), agora));
 			cache.registrar(linhaId.get(), externo.status());
+			eventos.publishEvent(new StatusLinhaAlteradoEvent(linhaId.get(), salvo.getId(), atual.orElse(null),
+					salvo.getStatus(), salvo.getDescricao()));
 			log.info("Linha {} mudou de status: {} -> {}", externo.codigoLinha(),
 					atual.map(Enum::name).orElse("(sem status)"), externo.status());
 			registrados++;

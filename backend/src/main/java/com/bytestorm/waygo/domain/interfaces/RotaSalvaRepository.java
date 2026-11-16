@@ -16,6 +16,8 @@ public interface RotaSalvaRepository {
 
 	List<RotaSalva> listarPorUsuario(UUID idUsuario);
 
+	List<RotaSalva> listarTodas();
+
 	void excluir(Long id);
 
 }

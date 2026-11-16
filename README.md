@@ -130,6 +130,9 @@ Mais detalhes do app (variáveis, emulador, backend hospedado e problemas comuns
 | `EMAIL_HABILITADO` | `false` | Envia os e-mails (boas-vindas, conta excluída e recuperação de senha) |
 | `MAIL_USERNAME` / `MAIL_PASSWORD` | *(vazio)* | Conta SMTP. No Gmail, use uma [senha de app](https://myaccount.google.com/apppasswords) |
 | `MAIL_HOST` / `MAIL_PORT` | `smtp.gmail.com` / `587` | Servidor SMTP |
+| `FCM_HABILITADO` | `false` | Envia as notificações push pelo Firebase. Desligado, elas só aparecem no log |
+| `FCM_CREDENCIAIS` | *(vazio)* | Conta de serviço do Firebase: caminho do JSON, o próprio JSON ou o JSON em base64 |
+| `NOTIFICACOES_INTERVALO_FILA` | `PT30S` | Intervalo do envio da fila de notificações (e das novas tentativas) |
 
 **App (`mobile/.env`)**, veja [mobile/.env.example](mobile/.env.example). Com `EXPO_PUBLIC_API_HOST` vazio, o app usa automaticamente o IP da máquina que roda o Metro.
 
@@ -158,11 +161,30 @@ Com o backend rodando, a documentação interativa fica em <http://localhost:808
 | Rotas salvas | `GET`, `POST /rotas` · `GET`, `PUT`, `DELETE /rotas/{id}` | Logado (só as próprias) |
 | Agendamentos | `GET /rotas/agendamentos` · `GET`, `POST /rotas/{idRota}/agendamentos` · `GET`, `PUT`, `DELETE /rotas/agendamentos/{id}` | Logado (só os próprios) |
 | Conta | `GET /usuarios/me` | Logado |
+| Aparelhos (push) | `POST /dispositivos` (token FCM, plataforma e alertas de status ligados ou não) · `DELETE /dispositivos?token=` | Logado |
 | Administração | `GET /usuarios` · `POST`, `PUT`, `DELETE /linhas` e `/estacoes` · `PUT /linhas/{id}/estacoes/ordem` · `PATCH /linhas/{id}/status` | Administrador |
 
 Nos endpoints protegidos, envie o token no header `Authorization: Bearer <token>`.
 
 **Recuperação de senha:** o código vale por 15 minutos, aceita 5 tentativas e só pode ser usado uma vez. Pedir um novo código invalida o anterior, e um novo envio só sai 1 minuto depois do último. `esqueci-minha-senha` sempre responde `202`, exista ou não a conta, para não revelar quais e-mails estão cadastrados. Com `EMAIL_HABILITADO=false`, o código aparece no log do backend.
+
+## Notificações push (FCM)
+
+O backend manda dois tipos de push pelo Firebase Cloud Messaging:
+
+- **Lembrete do agendamento (US11):** no horário de aviso (partida menos a antecedência), diz se a rota está ok e quanto tempo leva, ou quais linhas têm problema e qual é a rota alternativa.
+- **Alerta de status (US15 e US16):** quando muda o status de uma linha usada por uma rota salva, avisa quem tem os alertas ligados, já com a rota alternativa quando houver. Ao tocar, o app abre a rota no mapa (na alternativa, se ela foi oferecida).
+
+Cada notificação fica gravada na tabela `NOTIFICACAO`, que funciona como histórico e fila. A chave única por usuário impede que a mesma notificação saia duas vezes. Se o envio falhar, ela é tentada de novo com espera crescente (30 s até 15 min) até dar certo ou expirar: o lembrete vale até o horário de partida, e o alerta de status, por 1 hora. Os aparelhos ficam em `DISPOSITIVO_USUARIO`; um token que o Firebase recusa é desativado.
+
+**Configurar:**
+
+1. Crie um projeto no [console do Firebase](https://console.firebase.google.com) e adicione um app Android com o pacote `com.bytestorm.waygo`.
+2. Baixe o `google-services.json` para `mobile/`. O `app.config.js` só o usa se o arquivo existir.
+3. Em *Configurações do projeto > Contas de serviço*, gere uma chave privada e informe em `FCM_CREDENCIAIS`, com `FCM_HABILITADO=true`.
+4. Gere o APK com `eas build -p android --profile preview`. O push só funciona nesse build: no Expo Go e no iOS, o app continua com as notificações locais (que valem só enquanto ele está aberto e lembretes semanais sem o status da rota).
+
+Com o push ativo, o app desliga os avisos locais para não duplicar. Ao sair da conta, o aparelho é removido.
 
 ## Testes
 

@@ -4,6 +4,8 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +21,7 @@ import com.bytestorm.waygo.application.dto.response.RotaResponse;
 import com.bytestorm.waygo.application.dto.response.TrechoRotaResponse;
 import com.bytestorm.waygo.domain.entity.Estacao;
 import com.bytestorm.waygo.domain.entity.LinhaTransporte;
+import com.bytestorm.waygo.domain.entity.RotaSalva;
 import com.bytestorm.waygo.domain.enums.CriterioRota;
 import com.bytestorm.waygo.domain.enums.StatusOperacional;
 import com.bytestorm.waygo.domain.enums.TipoConexao;
@@ -77,6 +80,32 @@ public class RotaService {
 						: "Não há rota disponível entre " + origem.getNome() + " e " + destino.getNome()
 								+ " com o status atual das linhas"));
 		return montarResposta(grafo, parametros, origem, destino, caminho);
+	}
+
+	public Optional<RotaResponse> rotaHabitual(RotaSalva rota) {
+		return calcularEntre(rota, Map.of(), false);
+	}
+
+	/**
+	 * Rota com o status atual das linhas. {@code alternativa} usa só linhas em operação normal.
+	 * Vazio quando não há rota possível (em vez de lançar exceção, como no endpoint).
+	 */
+	public Optional<RotaResponse> rotaAgora(RotaSalva rota, boolean alternativa) {
+		return calcularEntre(rota, statusCache.statusAtuais(), alternativa);
+	}
+
+	private Optional<RotaResponse> calcularEntre(RotaSalva rota, Map<Long, StatusOperacional> status,
+			boolean alternativa) {
+		GrafoRede grafo = grafoCache.obter();
+		Optional<Estacao> origem = grafo.estacao(rota.getIdEstacaoOrigem());
+		Optional<Estacao> destino = grafo.estacao(rota.getIdEstacaoDestino());
+		if (origem.isEmpty() || destino.isEmpty()) {
+			return Optional.empty();
+		}
+		ParametrosRota parametros = new ParametrosRota(rota.getCriterioRota(), fatorLentidao,
+				(int) penalidadeBaldeacao.toSeconds(), status, alternativa);
+		return calculadora.calcular(grafo, origem.get().getId(), destino.get().getId(), parametros)
+				.map(caminho -> montarResposta(grafo, parametros, origem.get(), destino.get(), caminho));
 	}
 
 	private CriterioRota resolverCriterio(String criterio) {

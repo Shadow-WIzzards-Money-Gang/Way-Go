@@ -7,11 +7,13 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import com.bytestorm.waygo.application.cache.StatusLinhasCache;
+import com.bytestorm.waygo.application.event.StatusLinhaAlteradoEvent;
 import com.bytestorm.waygo.application.dto.request.LinhaAtualizacaoRequest;
 import com.bytestorm.waygo.application.dto.request.LinhaRequest;
 import com.bytestorm.waygo.application.dto.request.OrdemEstacoesRequest;
@@ -34,8 +36,9 @@ class AdminLinhaServiceTest {
 
 	private final RedeEmMemoria rede = new RedeEmMemoria();
 	private final StatusLinhasCache statusCache = rede.statusCache(clock);
+	private final List<Object> eventos = new ArrayList<>();
 	private final AdminLinhaService service = new AdminLinhaService(rede.linhas, rede.linhaEstacoes, rede.status,
-			rede.linhaService(), rede.grafoCache(clock), statusCache, clock);
+			rede.linhaService(), rede.grafoCache(clock), statusCache, clock, eventos::add);
 
 	private LinhaResumoResponse criarLinha(String codigo) {
 		return service.criar(new LinhaRequest("Linha " + codigo, codigo, "#123456", "Metrô", TipoTransporte.METRO));
@@ -136,6 +139,20 @@ class AdminLinhaServiceTest {
 		assertThat(status.status()).isEqualTo(StatusOperacional.PARALISADA);
 		assertThat(status.atualizadoEm()).isEqualTo(LocalDateTime.ofInstant(AGORA, ZoneOffset.UTC));
 		assertThat(statusCache.statusAtuais()).containsEntry(id, StatusOperacional.PARALISADA);
+	}
+
+	@Test
+	void alterarStatusPublicaEventoSoQuandoMuda() {
+		Long id = criarLinha("1").id();
+		service.alterarStatus(id, new StatusLinhaRequest(StatusOperacional.NORMAL, null));
+		service.alterarStatus(id, new StatusLinhaRequest(StatusOperacional.PARALISADA, "Falha de energia"));
+		service.alterarStatus(id, new StatusLinhaRequest(StatusOperacional.PARALISADA, "Ainda sem energia"));
+
+		assertThat(eventos).hasSize(2);
+		StatusLinhaAlteradoEvent mudanca = (StatusLinhaAlteradoEvent) eventos.get(1);
+		assertThat(mudanca.anterior()).isEqualTo(StatusOperacional.NORMAL);
+		assertThat(mudanca.novo()).isEqualTo(StatusOperacional.PARALISADA);
+		assertThat(mudanca.descricao()).isEqualTo("Falha de energia");
 	}
 
 }
