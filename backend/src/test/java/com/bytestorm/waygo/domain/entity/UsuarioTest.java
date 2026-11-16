@@ -76,6 +76,25 @@ class UsuarioTest {
 	}
 
 	@Test
+	void redefinirSenhaTrocaSemPedirASenhaAtual() {
+		Usuario usuario = usuario();
+
+		usuario.redefinirSenha("outraSenha456", HASHER);
+
+		assertThat(usuario.verificarSenha("outraSenha456", HASHER)).isTrue();
+		assertThat(usuario.verificarSenha("senhaForte123", HASHER)).isFalse();
+	}
+
+	@Test
+	void redefinirSenhaValidaANovaSenha() {
+		Usuario usuario = usuario();
+
+		assertThatThrownBy(() -> usuario.redefinirSenha("curta", HASHER))
+				.isInstanceOf(IllegalArgumentException.class);
+		assertThat(usuario.verificarSenha("senhaForte123", HASHER)).isTrue();
+	}
+
+	@Test
 	void validaEComparaEmailSemDiferenciarMaiusculas() {
 		assertThatThrownBy(() -> Usuario.criar("sem-arroba", "senhaForte123", HASHER, AGORA))
 				.isInstanceOf(IllegalArgumentException.class);

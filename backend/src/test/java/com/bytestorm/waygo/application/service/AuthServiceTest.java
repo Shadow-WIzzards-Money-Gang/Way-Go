@@ -103,6 +103,16 @@ class AuthServiceTest {
 		public void enviarContaExcluida(String destinatario) {
 			throw new UnsupportedOperationException();
 		}
+
+		@Override
+		public void enviarCodigoRecuperacao(String destinatario, String codigo) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void enviarSenhaRedefinida(String destinatario) {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	private static TokenService criarTokenService() {

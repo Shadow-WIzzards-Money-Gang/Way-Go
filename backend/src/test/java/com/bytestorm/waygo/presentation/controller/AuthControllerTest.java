@@ -2,6 +2,8 @@ package com.bytestorm.waygo.presentation.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -32,9 +34,12 @@ import com.bytestorm.waygo.application.dto.request.LoginRequest;
 import com.bytestorm.waygo.application.dto.request.RegistroRequest;
 import com.bytestorm.waygo.application.dto.response.LoginResponse;
 import com.bytestorm.waygo.application.dto.response.RegistroResponse;
+import com.bytestorm.waygo.application.dto.request.RedefinirSenhaRequest;
 import com.bytestorm.waygo.application.service.AuthService;
+import com.bytestorm.waygo.application.service.RecuperacaoSenhaService;
 import com.bytestorm.waygo.domain.exception.CredenciaisInvalidasException;
 import com.bytestorm.waygo.domain.exception.EmailJaCadastradoException;
+import com.bytestorm.waygo.domain.exception.RequisicaoInvalidaException;
 import com.bytestorm.waygo.domain.interfaces.TokenProvider;
 import com.bytestorm.waygo.infrastructure.config.security.SecurityConfig;
 
@@ -56,6 +61,9 @@ class AuthControllerTest {
 
 	@MockitoBean
 	private AuthService authService;
+
+	@MockitoBean
+	private RecuperacaoSenhaService recuperacaoSenhaService;
 
 	// Dependências do AuthFilter, que o @WebMvcTest carrega por ser um Filter
 	@MockitoBean
@@ -131,6 +139,71 @@ class AuthControllerTest {
 		mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON).content("{email:"))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.message").value("Corpo da requisição ausente ou com JSON inválido"));
+	}
+
+	// --- recuperação de senha ---
+
+	@Test
+	void esqueciMinhaSenhaEhPublicoEDevolve202() throws Exception {
+		mockMvc.perform(post("/api/v1/auth/esqueci-minha-senha").contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"email": "ana@email.com"}
+						"""))
+				.andExpect(status().isAccepted());
+
+		verify(recuperacaoSenhaService).solicitar("ana@email.com");
+	}
+
+	@Test
+	void esqueciMinhaSenhaComEmailInvalidoDevolve400() throws Exception {
+		mockMvc.perform(post("/api/v1/auth/esqueci-minha-senha").contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"email": "nao-eh-email"}
+						"""))
+				.andExpect(status().isBadRequest());
+
+		verifyNoInteractions(recuperacaoSenhaService);
+	}
+
+	@Test
+	void redefinirSenhaEhPublicoEDevolve204() throws Exception {
+		mockMvc.perform(post("/api/v1/auth/redefinir-senha").contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"email": "ana@email.com", "codigo": "048213", "novaSenha": "novaSenha123"}
+						"""))
+				.andExpect(status().isNoContent());
+
+		verify(recuperacaoSenhaService)
+				.redefinir(new RedefinirSenhaRequest("ana@email.com", "048213", "novaSenha123"));
+	}
+
+	@Test
+	void redefinirSenhaComCodigoForaDoFormatoOuSenhaCurtaDevolve400SemChamarOService() throws Exception {
+		mockMvc.perform(post("/api/v1/auth/redefinir-senha").contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"email": "ana@email.com", "codigo": "12ab", "novaSenha": "novaSenha123"}
+						"""))
+				.andExpect(status().isBadRequest());
+		mockMvc.perform(post("/api/v1/auth/redefinir-senha").contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"email": "ana@email.com", "codigo": "123456", "novaSenha": "curta"}
+						"""))
+				.andExpect(status().isBadRequest());
+
+		verifyNoInteractions(recuperacaoSenhaService);
+	}
+
+	@Test
+	void redefinirSenhaComCodigoErradoDevolve400ComMensagem() throws Exception {
+		willThrow(new RequisicaoInvalidaException("Código inválido ou expirado"))
+				.given(recuperacaoSenhaService).redefinir(any(RedefinirSenhaRequest.class));
+
+		mockMvc.perform(post("/api/v1/auth/redefinir-senha").contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"email": "ana@email.com", "codigo": "123456", "novaSenha": "novaSenha123"}
+						"""))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value("Código inválido ou expirado"));
 	}
 
 	@Test

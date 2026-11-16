@@ -53,6 +53,16 @@ class UsuarioServiceTest {
 		public void enviarContaExcluida(String destinatario) {
 			contasExcluidasNotificadas.add(destinatario);
 		}
+
+		@Override
+		public void enviarCodigoRecuperacao(String destinatario, String codigo) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void enviarSenhaRedefinida(String destinatario) {
+			throw new UnsupportedOperationException();
+		}
 	});
 
 	private static class Usuarios implements UsuarioRepository {

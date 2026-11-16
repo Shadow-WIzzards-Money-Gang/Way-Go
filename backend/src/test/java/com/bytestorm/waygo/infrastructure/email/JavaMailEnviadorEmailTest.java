@@ -69,6 +69,43 @@ class JavaMailEnviadorEmailTest {
 	}
 
 	@Test
+	void enviaCodigoDeRecuperacaoComValidade() throws Exception {
+		criar(true).enviarCodigoRecuperacao("ana@email.com", "048213");
+
+		ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
+		verify(mailSender).send(captor.capture());
+		MimeMessage mensagem = captor.getValue();
+		mensagem.saveChanges();
+
+		assertThat(mensagem.getSubject()).isEqualTo(JavaMailEnviadorEmail.ASSUNTO_RECUPERACAO);
+		assertThat(mensagem.getRecipients(Message.RecipientType.TO))
+				.containsExactly(new InternetAddress("ana@email.com"));
+		assertThat(textoDe(mensagem)).contains("048213", "15 minutos", "ana@email.com")
+				.doesNotContain("{{codigo}}", "{{validade}}", "{{email}}");
+	}
+
+	@Test
+	void enviaAvisoDeSenhaRedefinida() throws Exception {
+		criar(true).enviarSenhaRedefinida("ana@email.com");
+
+		ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
+		verify(mailSender).send(captor.capture());
+		MimeMessage mensagem = captor.getValue();
+		mensagem.saveChanges();
+
+		assertThat(mensagem.getSubject()).isEqualTo(JavaMailEnviadorEmail.ASSUNTO_SENHA_REDEFINIDA);
+		assertThat(textoDe(mensagem)).contains("ana@email.com", "redefinida").doesNotContain("{{email}}");
+	}
+
+	@Test
+	void codigoDeRecuperacaoComEmailDesabilitadoNaoEnvia() {
+		new JavaMailEnviadorEmail(mailSender, new EmailProperties(false, "waygo@gmail.com", "WayGo"))
+				.enviarCodigoRecuperacao("ana@email.com", "048213");
+
+		verifyNoInteractions(mailSender);
+	}
+
+	@Test
 	void desabilitadoNaoEnvia() {
 		new JavaMailEnviadorEmail(mailSender, new EmailProperties(false, "waygo@gmail.com", "WayGo"))
 				.enviarBoasVindas("ana@email.com");

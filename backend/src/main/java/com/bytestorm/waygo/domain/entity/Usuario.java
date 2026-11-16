@@ -62,6 +62,10 @@ public class Usuario {
 		this.senhaHash = validarHash(gerarHash(novaSenha, hasher));
 	}
 
+	public void redefinirSenha(String novaSenha, SenhaHasher hasher) {
+		this.senhaHash = validarHash(gerarHash(novaSenha, hasher));
+	}
+
 	public void adicionarRole(Role role) {
 		roles.add(exigir(role, "role"));
 	}

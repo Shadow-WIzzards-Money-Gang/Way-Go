@@ -12,6 +12,7 @@ import com.bytestorm.waygo.domain.entity.LinhaStatus;
 import com.bytestorm.waygo.domain.entity.LinhaTransporte;
 import com.bytestorm.waygo.domain.entity.RotaAgendada;
 import com.bytestorm.waygo.domain.entity.RotaSalva;
+import com.bytestorm.waygo.domain.entity.TokenRecuperacaoSenha;
 import com.bytestorm.waygo.domain.entity.Usuario;
 import com.bytestorm.waygo.domain.valueobject.Coordenada;
 import com.bytestorm.waygo.infrastructure.persistence.entity.BaldeacaoEntity;
@@ -23,6 +24,7 @@ import com.bytestorm.waygo.infrastructure.persistence.entity.LinhaTransporteEnti
 import com.bytestorm.waygo.infrastructure.persistence.entity.RoleEntity;
 import com.bytestorm.waygo.infrastructure.persistence.entity.RotaAgendadaEntity;
 import com.bytestorm.waygo.infrastructure.persistence.entity.RotaSalvaEntity;
+import com.bytestorm.waygo.infrastructure.persistence.entity.TokenRecuperacaoSenhaEntity;
 import com.bytestorm.waygo.infrastructure.persistence.entity.UsuarioEntity;
 
 public final class PersistenciaMapper {
@@ -110,6 +112,16 @@ public final class PersistenciaMapper {
 		return new RotaAgendadaEntity(rotaAgendada.getId(), rotaAgendada.getIdRotaSalva(),
 				rotaAgendada.getHorarioPartidaMinutos(), rotaAgendada.getAntecedenciaMinutos(), rotaAgendada.isAtiva(),
 				rotaAgendada.getCriadoEm(), new HashSet<>(rotaAgendada.getDiasSemana()));
+	}
+
+	public static TokenRecuperacaoSenha paraDominio(TokenRecuperacaoSenhaEntity entity) {
+		return TokenRecuperacaoSenha.reconstruir(entity.getId(), entity.getIdUsuario(), entity.getCodigoHash(),
+				entity.getExpiraEm(), entity.getTentativas(), entity.getUsadoEm(), entity.getCriadoEm());
+	}
+
+	public static TokenRecuperacaoSenhaEntity paraEntity(TokenRecuperacaoSenha token) {
+		return new TokenRecuperacaoSenhaEntity(token.getId(), token.getIdUsuario(), token.getCodigoHash(),
+				token.getExpiraEm(), token.getTentativas(), token.getUsadoEm(), token.getCriadoEm());
 	}
 
 }

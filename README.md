@@ -127,7 +127,7 @@ Mais detalhes do app (variáveis, emulador, backend hospedado e problemas comuns
 | `JWT_SEGREDO` | `segredo` | Segredo de assinatura dos tokens. **Troque em produção** |
 | `JWT_EXPIRACAO_MINUTOS` | `60` | Validade do token |
 | `CORS_ORIGENS_PERMITIDAS` | `*` | Origens liberadas para o app web |
-| `EMAIL_HABILITADO` | `false` | Envia o e-mail de boas-vindas no cadastro |
+| `EMAIL_HABILITADO` | `false` | Envia os e-mails (boas-vindas, conta excluída e recuperação de senha) |
 | `MAIL_USERNAME` / `MAIL_PASSWORD` | *(vazio)* | Conta SMTP. No Gmail, use uma [senha de app](https://myaccount.google.com/apppasswords) |
 | `MAIL_HOST` / `MAIL_PORT` | `smtp.gmail.com` / `587` | Servidor SMTP |
 
@@ -150,6 +150,7 @@ Com o backend rodando, a documentação interativa fica em <http://localhost:808
 | Recurso | Endpoints | Acesso |
 |---|---|---|
 | Autenticação | `POST /auth/registro`, `POST /auth/login` | Público |
+| Recuperação de senha | `POST /auth/esqueci-minha-senha` (envia código de 6 dígitos por e-mail), `POST /auth/redefinir-senha` (e-mail + código + nova senha) | Público |
 | Rede | `GET /rede` (linhas, estações, conexões e status) | Público |
 | Linhas | `GET /linhas`, `GET /linhas/{id}`, `GET /linhas/{id}/estacoes`, `GET /linhas/{id}/status` | Público |
 | Estações | `GET /estacoes` (paginado, com busca), `GET /estacoes/{id}`, `/{id}/linhas`, `/{id}/conexoes` | Público |
@@ -160,6 +161,8 @@ Com o backend rodando, a documentação interativa fica em <http://localhost:808
 | Administração | `GET /usuarios` · `POST`, `PUT`, `DELETE /linhas` e `/estacoes` · `PUT /linhas/{id}/estacoes/ordem` · `PATCH /linhas/{id}/status` | Administrador |
 
 Nos endpoints protegidos, envie o token no header `Authorization: Bearer <token>`.
+
+**Recuperação de senha:** o código vale por 15 minutos, aceita 5 tentativas e só pode ser usado uma vez. Pedir um novo código invalida o anterior, e um novo envio só sai 1 minuto depois do último. `esqueci-minha-senha` sempre responde `202`, exista ou não a conta, para não revelar quais e-mails estão cadastrados. Com `EMAIL_HABILITADO=false`, o código aparece no log do backend.
 
 ## Testes
 
