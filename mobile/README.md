@@ -8,7 +8,7 @@ App mobile do WayGo (React Native + Expo + NativeWind). Mostra o status das linh
 | **Estações** | Lista paginada (20 por página) com busca e filtro feitos no servidor; detalhe com linhas, status, integração e atalhos "Sair daqui"/"Ir para cá" | `GET /estacoes?pagina&tamanho&busca&integracoes`, `GET /rede`, `GET /estacoes/{id}` |
 | **Linhas** | Lista e filtro por tipo; detalhe com timeline de estações e baldeações | `GET /rede`, `GET /linhas/{id}`, `GET /linhas/{id}/status` |
 | **Rotas** | Rotas salvas na conta (exige login), lembrete no aparelho e alertas | `GET/POST/PUT/DELETE /rotas` |
-| **Conta** | Login, cadastro e "Minha conta", pelo avatar no canto das telas | `POST /auth/login`, `POST /auth/registro`, `GET /usuarios/me` |
+| **Conta** | Login, cadastro e "Minha conta", pelo avatar no canto das telas | `POST /auth/login`, `POST /auth/registro`, `POST /auth/esqueci-minha-senha`, `POST /auth/redefinir-senha`, `GET /usuarios/eu`, `POST /usuarios/eu/atualizar-senha`, `DELETE /usuarios/eu` |
 
 ## Requisitos
 
