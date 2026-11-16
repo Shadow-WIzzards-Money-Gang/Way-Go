@@ -1,3 +1,4 @@
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { AndroidImportance } from 'expo-notifications';
 import { Platform } from 'react-native';
@@ -15,13 +16,35 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export async function pedirPermissaoNotificacoes(): Promise<boolean> {
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync(CANAL_ANDROID, {
-      name: 'Alertas das rotas',
-      importance: AndroidImportance.HIGH,
-    });
+/** Canal usado pelos avisos locais e pelo push do backend (FcmEnviadorPush usa o mesmo id). */
+export async function criarCanalAndroid(): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  await Notifications.setNotificationChannelAsync(CANAL_ANDROID, {
+    name: 'Alertas das rotas',
+    importance: AndroidImportance.HIGH,
+  });
+}
+
+/**
+ * Token do Firebase Cloud Messaging deste aparelho, para o backend mandar push.
+ * Só existe em build próprio no Android (APK do EAS com google-services.json): no Expo Go
+ * e no iOS devolve null, e o app segue com as notificações locais.
+ */
+export async function obterTokenFcm(): Promise<string | null> {
+  if (Platform.OS !== 'android') return null;
+  if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) return null;
+  try {
+    await criarCanalAndroid();
+    const token = await Notifications.getDevicePushTokenAsync();
+    return typeof token.data === 'string' && token.data.length > 0 ? token.data : null;
+  } catch {
+    // Build sem o Firebase configurado (sem google-services.json) ou sem Google Play Services.
+    return null;
   }
+}
+
+export async function pedirPermissaoNotificacoes(): Promise<boolean> {
+  await criarCanalAndroid();
   const atual = await Notifications.getPermissionsAsync();
   if (atual.granted) return true;
   const pedido = await Notifications.requestPermissionsAsync();

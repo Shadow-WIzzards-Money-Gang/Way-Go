@@ -1,5 +1,6 @@
 import type {
   AlterarSenhaRequest,
+  DispositivoRequest,
   EstacaoDetalhe,
   EstacaoRequest,
   EstacaoResumo,
@@ -109,6 +110,14 @@ export const rotasSalvasApi = {
   atualizar: (id: number, dados: RotaSalvaRequest) =>
     api.put<RotaSalvaResponse>(`/rotas/${id}`, dados).then((r) => r.data),
   excluir: (id: number) => api.delete<void>(`/rotas/${id}`).then(() => undefined),
+};
+
+/** Aparelhos da conta logada que recebem push (FCM). */
+export const dispositivosApi = {
+  registrar: (dados: DispositivoRequest) =>
+    api.post<void>('/dispositivos', dados).then(() => undefined),
+  remover: (token: string) =>
+    api.delete<void>('/dispositivos', { params: { token } }).then(() => undefined),
 };
 
 /** Agendamentos das rotas salvas do usuário logado (o backend só devolve os da conta). */

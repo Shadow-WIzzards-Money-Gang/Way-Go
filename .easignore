@@ -37,6 +37,8 @@ mobile/expo-env.d.ts
 *.pem
 *.mobileprovision
 google-services.json
+# O do app sobe: o build Android precisa dele para o push (FCM) funcionar.
+!mobile/google-services.json
 
 # Env locais do mobile (o mobile/.env sobe de propósito)
 mobile/.env*.local

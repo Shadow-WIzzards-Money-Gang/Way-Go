@@ -7,8 +7,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
 import { definirAoNaoAutorizado } from '@/api/client';
+import { useAberturaPorNotificacao } from '@/hooks/useAberturaPorNotificacao';
 import { useAlertasRotas } from '@/hooks/useAlertasRotas';
 import { useLembretesAgendamentos } from '@/hooks/useLembretesAgendamentos';
+import { usePushRemoto } from '@/hooks/usePushRemoto';
 import { abrirLogin, descartarRotasAntigasDoAparelho, descartarSessaoExpirada } from '@/lib/conta';
 import { configurarFocoDoApp, queryClient } from '@/lib/queryClient';
 import { useSessao } from '@/store/sessao';
@@ -27,6 +29,8 @@ const tema = {
 };
 
 function AlertasDeRotas() {
+  usePushRemoto();
+  useAberturaPorNotificacao();
   useAlertasRotas();
   useLembretesAgendamentos();
   return null;

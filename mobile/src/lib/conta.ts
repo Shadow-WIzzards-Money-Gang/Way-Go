@@ -1,9 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { type Href, router } from 'expo-router';
 
+import { dispositivosApi } from '@/api/waygo';
 import { queryKeys } from '@/hooks/queries';
 import { queryClient } from '@/lib/queryClient';
 import { cancelarTodosOsLembretes } from '@/services/notifications';
+import { usePush } from '@/store/push';
 import { useRotasLocais } from '@/store/rotasLocais';
 import { useSessao } from '@/store/sessao';
 
@@ -68,8 +70,17 @@ export async function descartarSessaoExpirada(): Promise<void> {
   queryClient.removeQueries({ queryKey: queryKeys.conta });
 }
 
-/** Saída pedida pelo usuário: também apaga os dados locais das rotas e os lembretes. */
+/**
+ * Saída pedida pelo usuário: para de receber push da conta neste aparelho e
+ * também apaga os dados locais das rotas e os lembretes.
+ */
 export async function encerrarSessao(): Promise<void> {
+  const { tokenRegistrado, definirTokenRegistrado } = usePush.getState();
+  if (tokenRegistrado) {
+    // Sem internet, o registro fica no servidor e passa para a próxima conta que entrar aqui.
+    await dispositivosApi.remover(tokenRegistrado).catch(() => undefined);
+    definirTokenRegistrado(null);
+  }
   await descartarSessaoExpirada();
   await limparDadosLocaisDaConta();
 }

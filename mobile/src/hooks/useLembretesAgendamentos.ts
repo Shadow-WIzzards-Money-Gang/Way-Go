@@ -3,6 +3,7 @@ import { AppState } from 'react-native';
 
 import { log } from '@/lib/log';
 import { type LembreteAgendamento, sincronizarLembretes } from '@/services/notifications';
+import { usePushAtivo } from '@/store/push';
 import { useLogado } from '@/store/sessao';
 import { diaParaIndice } from '@/utils/agendamento';
 
@@ -17,9 +18,11 @@ import { useRotasDoUsuario } from './useRotasDoUsuario';
 export function useLembretesAgendamentos(): void {
   const logado = useLogado();
   const { rotas, isPending, agendamentosCarregando } = useRotasDoUsuario();
+  // Com push do servidor, o backend manda o lembrete já com o status da rota: os locais são limpos.
+  const pushAtivo = usePushAtivo();
   const ultimaAssinatura = useRef<string | null>(null);
 
-  const lembretes: LembreteAgendamento[] = rotas.flatMap((rota) =>
+  const lembretes: LembreteAgendamento[] = pushAtivo ? [] : rotas.flatMap((rota) =>
     rota.agendamentos
       .filter((a) => a.ativa)
       .map((a) => ({

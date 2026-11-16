@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Focus, RefreshCw } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, BackHandler, Pressable, Text, View } from 'react-native';
@@ -19,6 +19,7 @@ import { type CampoEstacao, usePlanejamento } from '@/store/planejamento';
 import { useLogado } from '@/store/sessao';
 import { colors } from '@/theme/colors';
 import type { LinhaRede } from '@/types/api';
+import { chaveDoTrajeto } from '@/utils/notificacao';
 import { rotaTemLinhaComProblema } from '@/utils/status';
 import { compararCodigos } from '@/utils/text';
 
@@ -57,10 +58,15 @@ export default function MapaScreen() {
   const sugeridaTemProblema = rotaSugerida ? rotaTemLinhaComProblema(rotaSugerida) : false;
 
   // A escolha "evitar linhas com problema" vale só para o trajeto/critério em que foi feita.
-  const chaveTrajeto = params ? `${params.origem}|${params.destino}|${params.criterio}` : '';
+  const chaveTrajeto = params ? chaveDoTrajeto(params.origem, params.destino, params.criterio) : '';
   const [escolhaAlternativa, setEscolhaAlternativa] = useState({ chave: '', ativa: false });
-  const alternativaAtiva =
-    sugeridaTemProblema && escolhaAlternativa.chave === chaveTrajeto && escolhaAlternativa.ativa;
+  // Um aviso do servidor que ofereceu rota alternativa abre o mapa já nela (?alternativa=<trajeto>).
+  const { alternativa: alternativaDoAviso } = useLocalSearchParams<{ alternativa?: string }>();
+  const alternativaEscolhida =
+    escolhaAlternativa.chave === chaveTrajeto
+      ? escolhaAlternativa.ativa
+      : alternativaDoAviso === chaveTrajeto;
+  const alternativaAtiva = sugeridaTemProblema && alternativaEscolhida;
   const alternarRota = (ativa: boolean) => setEscolhaAlternativa({ chave: chaveTrajeto, ativa });
 
   const alternativaQuery = useRota(

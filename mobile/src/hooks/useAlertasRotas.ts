@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 import { notificarAgora } from '@/services/notifications';
+import { usePushAtivo } from '@/store/push';
 import { useRotasLocais } from '@/store/rotasLocais';
 import type { StatusOperacional } from '@/types/api';
 import { infoStatus } from '@/utils/status';
@@ -18,6 +19,8 @@ export function useAlertasRotas(): void {
   const { data: rede } = useRede();
   const { rotas } = useRotasDoUsuario();
   const alertasAtivos = useRotasLocais((s) => s.alertasAtivos);
+  // Com push do servidor, quem avisa é o backend: o alerta local só serve de reserva.
+  const pushAtivo = usePushAtivo();
   const anteriores = useRef<Map<number, StatusOperacional> | null>(null);
 
   useEffect(() => {
@@ -26,7 +29,7 @@ export function useAlertasRotas(): void {
     const antes = anteriores.current;
     anteriores.current = atuais;
 
-    if (!antes || !alertasAtivos || rotas.length === 0) return;
+    if (!antes || !alertasAtivos || pushAtivo || rotas.length === 0) return;
 
     const linhasMonitoradas = new Set(rotas.flatMap((r) => r.linhas.map((l) => l.id)));
     for (const linha of rede.linhas) {
@@ -40,5 +43,5 @@ export function useAlertasRotas(): void {
         `Afeta ${afetadas.map((r) => r.nome).join(', ')}.${linha.statusDescricao ? ` ${linha.statusDescricao}` : ''}`,
       ).catch(() => undefined);
     }
-  }, [rede, rotas, alertasAtivos]);
+  }, [rede, rotas, alertasAtivos, pushAtivo]);
 }

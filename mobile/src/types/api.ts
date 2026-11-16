@@ -305,3 +305,11 @@ export interface RotaAgendada {
   ativa: boolean;
   criadoEm: string;
 }
+
+/** POST /dispositivos: registra o aparelho para receber push e liga/desliga os alertas de status. */
+export interface DispositivoRequest {
+  /** Token do Firebase Cloud Messaging. */
+  token: string;
+  plataforma: 'ANDROID' | 'IOS';
+  alertasStatus: boolean;
+}

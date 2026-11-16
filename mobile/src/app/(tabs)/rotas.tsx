@@ -194,7 +194,8 @@ export default function RotasScreen() {
         <View className="flex-1">
           <Text className="text-base font-semibold text-ink">Alertas das minhas rotas</Text>
           <Text className="text-sm text-ink-muted">
-            Aviso no celular quando uma linha das rotas salvas mudar de status.
+            Aviso no celular quando uma linha das rotas salvas mudar de status, com rota
+            alternativa quando houver.
           </Text>
         </View>
         <Switch
