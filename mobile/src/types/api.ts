@@ -202,6 +202,17 @@ export interface AlterarSenhaRequest {
   novaSenha: string;
 }
 
+export interface EsqueciSenhaRequest {
+  email: string;
+}
+
+export interface RedefinirSenhaRequest {
+  email: string;
+  /** Código de 6 dígitos enviado por e-mail. */
+  codigo: string;
+  novaSenha: string;
+}
+
 export interface RegistroResponse {
   id: string;
   email: string;

@@ -21,6 +21,7 @@ import type {
   LinhaAtualizacaoRequest,
   LinhaRequest,
   LoginRequest,
+  RedefinirSenhaRequest,
   RegistroRequest,
   RotaAgendada,
   RotaAgendadaRequest,
@@ -140,6 +141,26 @@ export function useRegistro() {
     mutationFn: async (dados: RegistroRequest) => {
       await authApi.registrar({ email: dados.email.trim(), senha: dados.senha });
       return entrarCom(dados);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.conta }),
+  });
+}
+
+/** POST /auth/esqueci-minha-senha: envia o código de recuperação por e-mail (se houver conta). */
+export function useSolicitarRecuperacaoSenha() {
+  return useMutation({
+    mutationFn: (email: string) => authApi.solicitarRecuperacaoSenha({ email: email.trim() }),
+  });
+}
+
+/** Redefine a senha com o código e já entra com a nova senha. */
+export function useRedefinirSenha() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (dados: RedefinirSenhaRequest) => {
+      const email = dados.email.trim();
+      await authApi.redefinirSenha({ email, codigo: dados.codigo, novaSenha: dados.novaSenha });
+      return entrarCom({ email, senha: dados.novaSenha });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.conta }),
   });

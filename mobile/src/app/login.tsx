@@ -143,6 +143,24 @@ export default function LoginScreen() {
             erro={tentou ? erroSenha : null}
           />
 
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: '/esqueci-senha',
+                params: {
+                  ...(email.trim() ? { email: email.trim() } : {}),
+                  ...(proximo ? { proximo } : {}),
+                },
+              })
+            }
+            accessibilityRole="link"
+            accessibilityLabel="Esqueci minha senha"
+            hitSlop={12}
+            className="-mt-2 self-end"
+          >
+            <Text className="text-base font-semibold text-primary">Esqueci minha senha</Text>
+          </Pressable>
+
           {erroApi && <AlertaErro mensagem={erroApi} />}
 
           <Button rotulo="Entrar" onPress={entrar} carregando={login.isPending} />

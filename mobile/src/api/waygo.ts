@@ -5,6 +5,7 @@ import type {
   EstacaoResumo,
   EstacoesParams,
   EstacaoDaLinha,
+  EsqueciSenhaRequest,
   LinhaAtualizacaoRequest,
   LinhaDetalhe,
   LinhaRequest,
@@ -13,6 +14,7 @@ import type {
   LoginRequest,
   LoginResponse,
   Pagina,
+  RedefinirSenhaRequest,
   Rede,
   RegistroRequest,
   RegistroResponse,
@@ -64,6 +66,11 @@ export const authApi = {
   login: (dados: LoginRequest) => api.post<LoginResponse>('/auth/login', dados).then((r) => r.data),
   registrar: (dados: RegistroRequest) =>
     api.post<RegistroResponse>('/auth/registro', dados).then((r) => r.data),
+  /** Sempre 202: o backend não revela se o e-mail tem conta. */
+  solicitarRecuperacaoSenha: (dados: EsqueciSenhaRequest) =>
+    api.post<void>('/auth/esqueci-minha-senha', dados).then(() => undefined),
+  redefinirSenha: (dados: RedefinirSenhaRequest) =>
+    api.post<void>('/auth/redefinir-senha', dados).then(() => undefined),
 };
 
 /** Endpoints que exigem token (o interceptor de client.ts envia o Authorization). */

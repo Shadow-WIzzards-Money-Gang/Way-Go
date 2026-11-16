@@ -69,6 +69,14 @@ export default function RootLayout() {
           <Stack.Screen name="login" options={{ presentation: 'modal' }} />
           <Stack.Screen name="cadastro" options={{ presentation: 'modal' }} />
           <Stack.Screen
+            name="esqueci-senha"
+            options={{ presentation: 'modal', headerShown: true, title: 'Esqueci minha senha' }}
+          />
+          <Stack.Screen
+            name="redefinir-senha"
+            options={{ presentation: 'modal', headerShown: true, title: 'Redefinir senha' }}
+          />
+          <Stack.Screen
             name="conta"
             options={{ presentation: 'modal', headerShown: true, title: 'Minha conta' }}
           />
