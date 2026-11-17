@@ -9,6 +9,10 @@
   com problema e lembretes na hora de sair de casa.
 </p>
 
+<p align="center">
+  Antonio Neto | Felipe Mendes | Mauro Carlos
+</p>
+
 ---
 
 ## Sobre o projeto
